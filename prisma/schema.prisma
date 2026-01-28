@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Role enum for user permissions
+enum Role {
+  USER
+  ADMIN
+}
+
+// User model - linked to Clerk userId
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique // Clerk user ID for authentication
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  
+  // Role & Status
+  role      Role     @default(USER) // User role for admin features
+  banned    Boolean  @default(false) // Ban status
+  
+  // Subscription & Credits
+  plan      String   @default("free") // free, pro, enterprise
+  credits   Int      @default(10) // Generation credits
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  designSystems DesignSystem[]
+  usageMetrics  UsageMetrics[]
+  
+  @@index([clerkId])
+  @@index([email])
+  @@map("users")
+}
+
+// DesignSystem model - stores generated design systems
+model DesignSystem {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  brandDescription String? // Original brand description used for generation
+  
+  // Generation Configuration
+  tier             String   @default("basic") // 'basic', 'professional', 'enterprise'
+  
+  // Design System Data (JSON)
+  colors           Json? // Color palette data
+  typography       Json? // Typography configuration
+  components       Json? // Component specifications
+  theme            Json? // Overall theme settings
+  
+  // Metadata
+  isPublic         Boolean  @default(false) // For showcase
+  featured         Boolean  @default(false) // Featured in showcase
+  status           String   @default("ACTIVE") // ACTIVE, ARCHIVED, DELETED
+  version          String   @default("1.0.0")
+  tags             String[] // For categorization/search
+  metadata         Json? // Additional metadata (AI provider, tokens used, etc.)
+  
+  // Timestamps
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  // Relations
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([tier]) // Index for filtering by generation tier
+  @@index([isPublic])
+  @@index([createdAt])
+  @@index([userId, createdAt(sort: Desc)]) // Composite index for fast user queries
+  @@index([userId, tier]) // Composite index for user tier queries
+  @@map("design_systems")
+}
+
+// UsageMetrics model - tracks API usage for analytics and rate limiting
+model UsageMetrics {
+  id            String   @id @default(cuid())
+  
+  // Usage tracking
+  action        String   // e.g., "generate_colors", "generate_typography", "generate_components"
+  creditsUsed   Int      @default(1)
+  
+  // Request details
+  promptTokens  Int?     // AI tokens used
+  success       Boolean  @default(true)
+  errorMessage  String?
+  
+  // Context
+  designSystemId String? // Optional link to design system
+  metadata      Json?    // Additional tracking data
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  
+  // Relations
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("usage_metrics")
+}
+
+// ContactSubmission model - stores contact form submissions
+model ContactSubmission {
+  id            String   @id @default(cuid())
+  email         String
+  message       String   @db.Text
+  category      String
+  agreedToTerms Boolean  @default(true)
+  
+  // Metadata
+  ipAddress     String?
+  userAgent     String?
+  submittedAt   DateTime @default(now())
+  
+  // Status tracking
+  status        String   @default("new") // new, read, replied, archived
+  adminNotes    String?  @db.Text
+  
+  @@index([email])
+  @@index([submittedAt])
+  @@index([status])
+  @@map("contact_submissions")
+}
+
+// AdminLog model - tracks admin actions for audit trail
+model AdminLog {
+  id        String   @id @default(cuid())
+  adminId   String   // Clerk ID of admin who performed action
+  action    String   // "banned_user", "added_credits", "deleted_design", "featured_design", etc.
+  targetId  String?  // User ID, design ID, or other target entity
+  details   Json?    // Additional information about the action
+  createdAt DateTime @default(now())
+  
+  @@index([adminId])
+  @@index([createdAt])
+  @@index([action])
+  @@map("admin_logs")
+}

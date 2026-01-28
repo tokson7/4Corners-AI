@@ -1,0 +1,118 @@
+# Temporary Test Mode Patch
+# Apply this to bypass authentication for testing
+# File: app/api/generate/colors/route.ts
+
+# ============================================
+# PATCH 1: Replace authentication (line 130-148)
+# ============================================
+
+# FIND THIS:
+```typescript
+    let user
+    try {
+      user = await requireUser()
+      console.log('✅ User authenticated:', user.id)
+      console.log(`   Current credits: ${user.credits}`)
+    } catch (authError) {
+      console.error('❌ Authentication failed:', authError)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Authentication required',
+          details: 'Please sign in to generate design systems',
+        },
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+    }
+```
+
+# REPLACE WITH THIS:
+```typescript
+    // ⚠️  TEST MODE: Mock user for testing (REMOVE BEFORE PRODUCTION!)
+    const user = {
+      id: 'test_user_id',
+      clerkId: 'test_clerk_id', 
+      email: 'test@example.com',
+      credits: 100,
+      firstName: 'Test',
+      lastName: 'User',
+      plan: 'free' as const,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    console.log('⚠️  [TEST MODE] Using mock user with 100 credits')
+```
+
+# ============================================
+# PATCH 2: Skip credit deduction (line 192-205)
+# ============================================
+
+# FIND THIS:
+```typescript
+    // Step 4.5: Deduct credits
+    console.log('💳 Step 4.5: Deducting credits...')
+    try {
+      await deductCredits(user.id, tierConfig.credits)
+      const remainingCredits = user.credits - tierConfig.credits
+      console.log(`✅ Credits deducted: ${tierConfig.credits}`)
+      console.log(`   Remaining credits: ${remainingCredits}`)
+    } catch (creditError) {
+      console.error('❌ Failed to deduct credits:', creditError)
+      console.warn('⚠️  Generation succeeded but credit deduction failed')
+    }
+```
+
+# REPLACE WITH THIS:
+```typescript
+    // Step 4.5: Deduct credits
+    console.log('💳 Step 4.5: Skipping credit deduction (TEST MODE)...')
+    console.log('⚠️  [TEST MODE] Credits NOT deducted')
+    // Commented out for testing:
+    // try {
+    //   await deductCredits(user.id, tierConfig.credits)
+    //   const remainingCredits = user.credits - tierConfig.credits
+    //   console.log(`✅ Credits deducted: ${tierConfig.credits}`)
+    //   console.log(`   Remaining credits: ${remainingCredits}`)
+    // } catch (creditError) {
+    //   console.error('❌ Failed to deduct credits:', creditError)
+    //   console.warn('⚠️  Generation succeeded but credit deduction failed')
+    // }
+```
+
+# ============================================
+# TO APPLY THIS PATCH:
+# ============================================
+
+1. Open: app/api/generate/colors/route.ts
+2. Find line 130-148 (authentication section)
+3. Replace with mock user from PATCH 1
+4. Find line 192-205 (credit deduction)
+5. Comment it out as shown in PATCH 2
+6. Save file
+7. Test generation without signing in
+
+# ============================================
+# TO REVERT (IMPORTANT!):
+# ============================================
+
+Before production:
+1. Remove the mock user
+2. Uncomment the try/catch for requireUser()
+3. Uncomment the credit deduction
+4. Test with real authentication
+
+# ============================================
+# QUICK TEST:
+# ============================================
+
+curl -X POST http://localhost:3010/api/generate/colors \
+  -H "Content-Type: application/json" \
+  -d '{
+    "brandDescription": "Modern tech startup",
+    "tier": "basic"
+  }'
+
+Should return 200 OK with design system data.

@@ -1,0 +1,420 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 262.1 83.3% 57.8%;
+    --radius: 0.5rem;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 262.1 83.3% 57.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+  
+  .glass-strong {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20;
+  }
+  
+  .gradient-purple-blue {
+    @apply bg-gradient-to-br from-purple-600 via-blue-600 to-purple-800;
+  }
+  
+  .gradient-subtle {
+    @apply bg-gradient-to-br from-purple-950/50 via-blue-950/50 to-purple-900/50;
+  }
+}
+
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* ===================================
+   REMOVE ALL CLERK BRANDING
+   =================================== */
+
+/* Hide all Clerk badges and footers */
+[data-clerk-badge],
+.cl-badge,
+.cl-internal-badge,
+.cl-footer,
+.cl-footerAction,
+.cl-organizationSwitcherPopoverFooter,
+.cl-userButtonPopoverFooter,
+.cl-userButtonPopoverCard__footer {
+  display: none !important;
+}
+
+/* Hide "Secured by Clerk" text */
+[class*="clerk"]:has(a[href*="clerk.com"]) {
+  display: none !important;
+}
+
+/* Hide development mode badge */
+.cl-internal-1s4wycp,
+.cl-internal-dev-badge {
+  display: none !important;
+}
+
+/* Hide any footer containing "Clerk" */
+footer:has(a[href*="clerk.com"]),
+div:has(> a[href*="clerk.com"][target="_blank"]) {
+  display: none !important;
+}
+
+/* Hide all possible Clerk footer variations */
+[class*="cl-footer"],
+[class*="cl-badge"],
+[class*="footerAction"] {
+  display: none !important;
+}
+
+/* ===================================
+   ACCESSIBLE FOCUS MANAGEMENT
+   Remove click focus, keep keyboard focus
+   =================================== */
+
+/* Remove focus ring on mouse click */
+*:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Subtle focus ring for keyboard navigation only */
+*:focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.3) !important;
+  outline-offset: 2px;
+  box-shadow: none !important;
+}
+
+/* Buttons - no focus on click, subtle on keyboard */
+button:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+button:focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.3) !important;
+  outline-offset: 2px;
+}
+
+/* Links - no focus on click, subtle on keyboard */
+a:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+a:focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.3) !important;
+  outline-offset: 2px;
+}
+
+/* Inputs - always show subtle focus (for usability) */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
+  border-color: rgba(139, 92, 246, 0.5) !important;
+}
+
+/* Remove Tailwind's default focus rings */
+.focus\:ring-2:focus:not(:focus-visible),
+.focus\:ring:focus:not(:focus-visible),
+.focus-visible\:ring-2:focus:not(:focus-visible) {
+  --tw-ring-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* ===================================
+   ANIMATED COLOR SQUARES LOADING
+   =================================== */
+
+/* Color wave animation with scale, opacity, and hue rotation */
+@keyframes color-wave {
+  0%, 100% {
+    transform: scale(0.95);
+    opacity: 0.7;
+    filter: hue-rotate(0deg) brightness(1);
+  }
+  25% {
+    transform: scale(1.05);
+    opacity: 1;
+    filter: hue-rotate(90deg) brightness(1.2);
+  }
+  50% {
+    transform: scale(1);
+    opacity: 0.9;
+    filter: hue-rotate(180deg) brightness(1.1);
+  }
+  75% {
+    transform: scale(1.05);
+    opacity: 1;
+    filter: hue-rotate(270deg) brightness(1.2);
+  }
+}
+
+.animate-color-wave {
+  animation: color-wave 2s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+/* Hover effect for color squares */
+.animate-color-wave:hover {
+  transform: scale(1.1) !important;
+  filter: brightness(1.3) !important;
+}
+
+/* ========================================
+   AUTO-HIDE NAVIGATION - GPU ACCELERATION
+   ======================================== */
+
+/* Optimize navigation for smooth 60fps animations */
+nav {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth scroll behavior for entire app */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================
+   EXACT VIDEO RECREATION - FALLING STARS
+   Perfect match to uploaded video
+   ============================================ */
+
+/* Base falling star */
+.falling-star {
+  position: absolute;
+  width: 1px;
+  height: 0;
+  background: transparent;
+  opacity: 0;
+  transform: rotate(-45deg);
+  animation: videoStar 2.5s ease-out infinite;
+  will-change: transform, opacity, height;
+  pointer-events: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+/* Exact animation matching video behavior */
+@keyframes videoStar {
+  /* Start: invisible */
+  0% {
+    opacity: 0;
+    height: 0;
+    transform: translate(0, 0) rotate(-45deg);
+    background: transparent;
+  }
+  
+  /* Fade in: star appears, grows */
+  8% {
+    opacity: 0.3;
+    height: 25px;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.4) 70%,
+      rgba(255, 255, 255, 0.3) 100%
+    );
+  }
+  
+  /* Peak: brightest, longest */
+  25% {
+    opacity: 0.5;
+    height: 50px;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.6) 60%,
+      rgba(255, 255, 255, 0.4) 100%
+    );
+  }
+  
+  /* Middle: maintaining visibility */
+  50% {
+    opacity: 0.13;
+    height: 48px;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.15) 65%,
+      rgba(255, 255, 255, 0.1) 100%
+    );
+  }
+  
+  /* Fading: getting dimmer */
+  80% {
+    opacity: 0.08;
+    height: 35px;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.1) 70%,
+      rgba(255, 255, 255, 0.06) 100%
+    );
+  }
+  
+  /* End: disappear */
+  100% {
+    opacity: 0;
+    height: 0;
+    transform: translate(70vw, 70vh) rotate(-45deg);
+    background: transparent;
+  }
+}
+
+/* ============================================
+   WAVE 1: 3 stars at 0s, 0.3s, 0.6s
+   Positions: left 15%, 45%, 75%
+   ============================================ */
+
+.star-w1-1 {
+  top: 8%;
+  left: 15%;
+  animation-delay: 0s;
+  animation-duration: 2.5s;
+}
+
+.star-w1-2 {
+  top: 12%;
+  left: 45%;
+  animation-delay: 0.3s;
+  animation-duration: 2.6s;
+}
+
+.star-w1-3 {
+  top: 10%;
+  left: 75%;
+  animation-delay: 0.6s;
+  animation-duration: 2.4s;
+}
+
+/* ============================================
+   WAVE 2: 4 stars at 3s, 3.3s, 3.6s, 3.9s
+   Positions: left 20%, 40%, 60%, 80%
+   ============================================ */
+
+.star-w2-1 {
+  top: 6%;
+  left: 20%;
+  animation-delay: 3s;
+  animation-duration: 2.5s;
+}
+
+.star-w2-2 {
+  top: 14%;
+  left: 40%;
+  animation-delay: 3.3s;
+  animation-duration: 2.6s;
+}
+
+.star-w2-3 {
+  top: 9%;
+  left: 60%;
+  animation-delay: 3.6s;
+  animation-duration: 2.4s;
+}
+
+.star-w2-4 {
+  top: 16%;
+  left: 80%;
+  animation-delay: 3.9s;
+  animation-duration: 2.5s;
+}
+
+/* ============================================
+   WAVE 3: 3 stars at 6.5s, 6.8s, 7.1s
+   Positions: left 25%, 55%, 85%
+   ============================================ */
+
+.star-w3-1 {
+  top: 7%;
+  left: 25%;
+  animation-delay: 6.5s;
+  animation-duration: 2.6s;
+}
+
+.star-w3-2 {
+  top: 13%;
+  left: 55%;
+  animation-delay: 6.8s;
+  animation-duration: 2.4s;
+}
+
+.star-w3-3 {
+  top: 11%;
+  left: 85%;
+  animation-delay: 7.1s;
+  animation-duration: 2.5s;
+}
