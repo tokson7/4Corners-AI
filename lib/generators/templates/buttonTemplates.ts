@@ -106,7 +106,7 @@ const props = withDefaults(defineProps<Props>(), {
   border-radius: ${styles.borderRadius};
   font-size: ${styles.fontSize};
   font-weight: ${styles.fontWeight};
-  font-family: ${typography.fonts.body};
+  font-family: ${typography.fonts?.body || 'Inter, sans-serif'};
   border: ${styles.border || 'none'};
   ${styles.boxShadow ? `box-shadow: ${styles.boxShadow};` : ''}
   cursor: pointer;
@@ -162,7 +162,7 @@ export function generateSvelteButton(
     border-radius: ${styles.borderRadius};
     font-size: ${styles.fontSize};
     font-weight: ${styles.fontWeight};
-    font-family: ${typography.fonts.body};
+    font-family: ${typography.fonts?.body || 'Inter, sans-serif'};
     border: ${styles.border || 'none'};
     ${styles.boxShadow ? `box-shadow: ${styles.boxShadow};` : ''}
     cursor: pointer;
@@ -216,7 +216,7 @@ export function generateCSSButton(
   border-radius: ${styles.borderRadius};
   font-size: ${styles.fontSize};
   font-weight: ${styles.fontWeight};
-  font-family: ${typography.fonts.body};
+  font-family: ${typography.fonts?.body || 'Inter, sans-serif'};
   border: ${styles.border || 'none'};
   ${styles.boxShadow ? `box-shadow: ${styles.boxShadow};` : ''}
   cursor: pointer;

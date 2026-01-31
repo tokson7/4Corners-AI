@@ -1,16 +1,44 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
+import { AlertCircle, Sparkles } from 'lucide-react'
 import { DesignSystemDisplay } from './DesignSystemDisplay'
 import { ColorWaveLoader } from './ColorWaveLoader'
 import type { GeneratedComponent } from '@/lib/generators/enhancedComponentGenerator'
 
 export default function GeneratorForm() {
+  const { user } = useUser()
+  const [userInfo, setUserInfo] = useState<any>(null)
   const [brandDescription, setBrandDescription] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [generatedSystem, setGeneratedSystem] = useState<any>(null)
   const [components, setComponents] = useState<GeneratedComponent[] | null>(null)
+
+  // Fetch user info on mount
+  useEffect(() => {
+    if (user) {
+      fetchUserInfo()
+    }
+  }, [user])
+
+  async function fetchUserInfo() {
+    try {
+      const response = await fetch('/api/user/info')
+      const data = await response.json()
+      setUserInfo(data)
+    } catch (error) {
+      console.error('Failed to fetch user info:', error)
+    }
+  }
+
+  // Calculate free trials remaining
+  const freeTrialsRemaining = userInfo
+    ? userInfo.freeGenerationsLimit - userInfo.freeGenerationsUsed
+    : 0
+  const isFreeUser = userInfo?.credits === 0 && freeTrialsRemaining > 0
+  const isAdmin = user?.primaryEmailAddress?.emailAddress === 'zaridze2909@gmail.com'
 
   const handleGenerate = async () => {
     if (!brandDescription.trim()) {
@@ -63,6 +91,17 @@ export default function GeneratorForm() {
       
       // Generate components from design tokens
       console.log('🧩 [Client] Generating components...')
+      console.log('🧩 [Client] Sending palette:', {
+        hasColors: !!data.designSystem.colors,
+        colorKeys: data.designSystem.colors ? Object.keys(data.designSystem.colors) : [],
+        hasNeutrals: !!data.designSystem.colors?.neutrals,
+        hasNeutral: !!data.designSystem.colors?.neutral,
+      })
+      console.log('🧩 [Client] Sending typography:', {
+        hasTypography: !!data.designSystem.typography,
+        typographyKeys: data.designSystem.typography ? Object.keys(data.designSystem.typography) : [],
+      })
+      
       try {
         const componentsResponse = await fetch('/api/generate-components', {
           method: 'POST',
@@ -73,16 +112,17 @@ export default function GeneratorForm() {
           }),
         })
         
-        if (componentsResponse.ok) {
-          const componentsData = await componentsResponse.json()
+        const componentsData = await componentsResponse.json()
+        
+        if (componentsResponse.ok && componentsData.success) {
           console.log('✅ [Client] Components generated:', componentsData.count)
           setComponents(componentsData.components)
         } else {
-          const errorData = await componentsResponse.json().catch(() => ({}))
           console.error('⚠️ [Client] Component generation failed:', {
             status: componentsResponse.status,
-            error: errorData.error || 'Unknown error',
-            details: errorData.details
+            success: componentsData.success,
+            error: componentsData.error || 'Unknown error',
+            details: componentsData.details
           })
         }
       } catch (compError) {
@@ -90,6 +130,9 @@ export default function GeneratorForm() {
         console.error('Error details:', compError instanceof Error ? compError.message : String(compError))
         // Don't fail the whole generation if components fail
       }
+      
+      // Refetch user info to update free trial counter
+      await fetchUserInfo()
       
       // Scroll to results after a short delay
       setTimeout(() => {
@@ -118,6 +161,42 @@ export default function GeneratorForm() {
     <div className="max-w-7xl mx-auto space-y-16">
       {/* Generation Form */}
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Admin Badge */}
+        {isAdmin && (
+          <div className="p-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg">
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-yellow-400" />
+              <div>
+                <p className="font-semibold text-yellow-400">Admin Access</p>
+                <p className="text-sm text-yellow-200">Unlimited generations with Enterprise quality</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* No Credits Warning */}
+        {!isAdmin && !isFreeUser && userInfo?.credits === 0 && (
+          <div className="p-4 bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-white mb-1">
+                  Out of Free Trials & Credits
+                </p>
+                <p className="text-sm text-red-200 mb-2">
+                  You&apos;ve used all 3 free trials. Upgrade to continue generating design systems!
+                </p>
+                <a
+                  href="/pricing"
+                  className="inline-block px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+                >
+                  Upgrade Now
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="text-center space-y-3">
           <h1 className="text-4xl md:text-5xl font-bold text-white">
             Tell us about your brand

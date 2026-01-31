@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils";
 import AnimatedCubeLogo from "@/components/AnimatedCubeLogo";
 
 const footerLinks = [
-  { label: "About", href: "#" },
-  { label: "Documentation", href: "#" },
-  { label: "API", href: "#" },
-  { label: "Blog", href: "#" },
+  { label: "About", href: "/about" },
+  { label: "Documentation", href: "/documentation" },
+  { label: "API", href: "/api-access" },
+  { label: "Blog", href: "/blog" },
 ];
 
 const socialLinks = [

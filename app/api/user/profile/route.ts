@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { requireUser } from '@/lib/utils/auth'
 import { prisma } from '@/lib/prisma'
 
+const isDev = process.env.NODE_ENV === 'development'
+
 /**
  * GET /api/user/profile
  * 
@@ -27,6 +29,8 @@ export async function GET() {
         lastName: true,
         plan: true,
         credits: true,
+        freeGenerationsUsed: true,
+        freeGenerationsLimit: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -61,11 +65,15 @@ export async function GET() {
       user: {
         id: userWithStats.id,
         email: userWithStats.email,
-        name: `${userWithStats.firstName || ''} ${userWithStats.lastName || ''}`.trim() || 'User',
+        name: userWithStats.firstName && userWithStats.lastName 
+          ? `${userWithStats.firstName} ${userWithStats.lastName}`.trim() 
+          : userWithStats.firstName || userWithStats.lastName || 'User',
         firstName: userWithStats.firstName,
         lastName: userWithStats.lastName,
         plan: userWithStats.plan,
         credits: userWithStats.credits,
+        freeGenerationsUsed: userWithStats.freeGenerationsUsed,
+        freeGenerationsLimit: userWithStats.freeGenerationsLimit,
         designSystemsCount: userWithStats._count.designSystems,
         createdAt: userWithStats.createdAt,
         updatedAt: userWithStats.updatedAt,

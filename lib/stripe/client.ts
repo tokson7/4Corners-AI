@@ -1,17 +1,10 @@
-import Stripe from "stripe";
+// lib/stripe/client.ts
+import { loadStripe } from '@stripe/stripe-js';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("STRIPE_SECRET_KEY is not set in environment variables");
+if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+  throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set');
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-11-20.acacia",
-  typescript: true,
-});
-
-// Price IDs from Stripe Dashboard
-// These should be set in your .env.local file
-export const STRIPE_PRICE_IDS = {
-  pro: process.env.STRIPE_PRO_PRICE_ID || "",
-  team: process.env.STRIPE_TEAM_PRICE_ID || "",
-};
+export const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+);

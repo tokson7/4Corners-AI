@@ -7,6 +7,13 @@
 
 import type { ColorPaletteResponse, TypographySystem } from '@/lib/types/designSystem';
 
+// Export type alias for compatibility
+export type DesignSystem = {
+  colors?: ColorPaletteResponse;
+  typography?: TypographySystem;
+  name?: string;
+};
+
 /**
  * Export design tokens as CSS custom properties
  * 

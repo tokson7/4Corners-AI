@@ -34,55 +34,62 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get user to check their credits and plan
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { credits: true, plan: true },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'User not found',
+          message: 'User account not found',
+        },
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Calculate generation limit based on plan
+    const generationLimit = user.plan === 'professional' ? 100 : 10;
+
     // Get current month start
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Get or create usage metrics
+    // Count usage metrics for this month
     const queryStart = Date.now();
-    let usageMetrics = await prisma.usageMetrics.findUnique({
+    const usageCount = await prisma.usageMetrics.count({
       where: {
-        userId_month: {
-          userId,
-          month: startOfMonth,
+        userId,
+        createdAt: {
+          gte: startOfMonth,
         },
+        action: 'generate_design_system',
+        success: true,
       },
     });
     
-    logDatabaseQuery('SELECT', 'usageMetrics', Date.now() - queryStart, {
-      found: !!usageMetrics,
+    logDatabaseQuery('COUNT', 'usageMetrics', Date.now() - queryStart, {
+      count: usageCount,
     });
 
-    if (!usageMetrics) {
-      // Create default metrics for free tier
-      const createStart = Date.now();
-      usageMetrics = await prisma.usageMetrics.create({
-        data: {
-          userId,
-          month: startOfMonth,
-          generationsUsed: 0,
-          generationLimit: 10, // Free tier default
-        },
-      });
-      
-      logDatabaseQuery('CREATE', 'usageMetrics', Date.now() - createStart, {
-        userId,
-        generationLimit: 10,
-      });
-    }
-
-    const remaining = usageMetrics.generationLimit - usageMetrics.generationsUsed;
-    const percentUsed = Math.round((usageMetrics.generationsUsed / usageMetrics.generationLimit) * 100);
+    const remaining = Math.max(0, generationLimit - usageCount);
+    const percentUsed = Math.round((usageCount / generationLimit) * 100);
 
     const response = NextResponse.json(
       {
         success: true,
         data: {
-          used: usageMetrics.generationsUsed,
-          limit: usageMetrics.generationLimit,
-          remaining: Math.max(0, remaining),
+          used: usageCount,
+          limit: generationLimit,
+          remaining,
           percentUsed,
-          month: usageMetrics.month,
+          month: startOfMonth,
           resetDate: new Date(now.getFullYear(), now.getMonth() + 1, 1),
         },
       },
@@ -93,8 +100,8 @@ export async function GET(request: NextRequest) {
     );
     
     logApiResponse('GET', '/api/user/usage', 200, Date.now() - startTime, {
-      used: usageMetrics.generationsUsed,
-      limit: usageMetrics.generationLimit,
+      used: usageCount,
+      limit: generationLimit,
       percentUsed,
     });
     

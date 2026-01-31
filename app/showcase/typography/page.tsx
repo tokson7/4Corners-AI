@@ -39,7 +39,7 @@ export default function TypographyShowcase() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pb-20 pt-20">
       {/* Header */}
       <div className="border-b border-white/10 bg-black/20 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-6">
@@ -58,7 +58,7 @@ export default function TypographyShowcase() {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-12 space-y-12">
+      <div className="container mx-auto px-4 py-12 space-y-12 max-w-7xl">
         
         {/* Type Scale */}
         <section>
@@ -168,7 +168,7 @@ export default function TypographyShowcase() {
         </section>
 
         {/* CTA */}
-        <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 backdrop-blur-xl border border-purple-500/30 rounded-xl p-8 text-center">
+        <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 backdrop-blur-xl border border-purple-500/30 rounded-xl p-8 text-center mb-12">
           <h3 className="text-2xl font-bold text-white mb-3">
             Build your typography system
           </h3>

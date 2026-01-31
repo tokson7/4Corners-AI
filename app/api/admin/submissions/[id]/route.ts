@@ -4,18 +4,19 @@ import { requireUser } from '@/lib/utils/auth'
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
     await requireUser()
+    const { id } = await params
     
     const body = await req.json()
     const { status, adminNotes } = body
     
     // Update submission
     const submission = await prisma.contactSubmission.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(status && { status }),
         ...(adminNotes && { adminNotes }),

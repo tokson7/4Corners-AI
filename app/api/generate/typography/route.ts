@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   generateTypographySystem,
-  selectFontPairing,
-  generateTypeScale,
-  generateLineHeights,
-  generateFontWeights,
-  loadFontsFromGoogle,
 } from "@/lib/ai/typographyGenerator";
 import type { BrandAnalysis } from "@/lib/ai/colorGenerator";
 import { checkRateLimit } from "@/lib/security/rateLimit";
@@ -84,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate typography system
-    const typographySystem = generateTypographySystem(brandAnalysis as BrandAnalysis);
+    const typographySystem = generateTypographySystem(brandAnalysis.tone || 'modern', brandAnalysis.industry);
 
     // Generate CSS variables
     const cssVariables = generateCSSVariables(typographySystem);
@@ -105,9 +100,9 @@ export async function POST(request: NextRequest) {
       },
       tailwind: tailwindConfig,
       pairing: {
-        heading: typographySystem.heading.font,
-        body: typographySystem.body.font,
-        mono: typographySystem.mono?.font,
+        heading: typographySystem.fonts.heading,
+        body: typographySystem.fonts.body,
+        mono: typographySystem.fonts.mono,
         description: getPairingDescription(typographySystem),
       },
     };
@@ -119,8 +114,8 @@ export async function POST(request: NextRequest) {
         userId: token.id as string,
         plan: "free", // TODO: Get from subscription
         timestamp: new Date().toISOString(),
-        headingFont: typographySystem.heading.font,
-        bodyFont: typographySystem.body.font,
+        headingFont: typographySystem.fonts.heading,
+        bodyFont: typographySystem.fonts.body,
         creditsUsed: 0, // Typography generation doesn't use credits yet
       }).catch(() => {});
     }
@@ -142,14 +137,14 @@ export async function POST(request: NextRequest) {
  * Generate CSS variables for typography system
  */
 function generateCSSVariables(system: ReturnType<typeof generateTypographySystem>): string {
-  const { heading, body, scale, lineHeights, mono } = system;
+  const { fonts, scale, lineHeights, weights } = system;
 
   let css = `:root {\n`;
   css += `  /* Font Families */\n`;
-  css += `  --font-heading: '${heading.font}', sans-serif;\n`;
-  css += `  --font-body: '${body.font}', sans-serif;\n`;
-  if (mono) {
-    css += `  --font-mono: '${mono.font}', monospace;\n`;
+  css += `  --font-heading: '${fonts.heading}', sans-serif;\n`;
+  css += `  --font-body: '${fonts.body}', sans-serif;\n`;
+  if (fonts.mono) {
+    css += `  --font-mono: '${fonts.mono}', monospace;\n`;
   }
 
   css += `\n  /* Type Scale */\n`;
@@ -163,7 +158,7 @@ function generateCSSVariables(system: ReturnType<typeof generateTypographySystem
   }
 
   css += `\n  /* Font Weights */\n`;
-  for (const [key, value] of Object.entries(heading.weights)) {
+  for (const [key, value] of Object.entries(weights)) {
     css += `  --font-weight-${key}: ${value};\n`;
   }
 
@@ -176,7 +171,7 @@ function generateCSSVariables(system: ReturnType<typeof generateTypographySystem
  * Generate Tailwind config for typography system
  */
 function generateTailwindConfig(system: ReturnType<typeof generateTypographySystem>): object {
-  const { heading, body, scale, lineHeights, mono } = system;
+  const { fonts, scale, lineHeights, weights } = system;
 
   return {
     theme: {
@@ -184,23 +179,22 @@ function generateTailwindConfig(system: ReturnType<typeof generateTypographySyst
         fontFamily: {
           heading: [`var(--font-heading)`, "sans-serif"],
           body: [`var(--font-body)`, "sans-serif"],
-          ...(mono && { mono: [`var(--font-mono)`, "monospace"] }),
+          ...(fonts.mono && { mono: [`var(--font-mono)`, "monospace"] }),
         },
         fontSize: {
-          xs: [scale.xs, { lineHeight: lineHeights.tight }],
-          sm: [scale.sm, { lineHeight: lineHeights.normal }],
-          base: [scale.base, { lineHeight: lineHeights.normal }],
-          lg: [scale.lg, { lineHeight: lineHeights.normal }],
-          xl: [scale.xl, { lineHeight: lineHeights.relaxed }],
-          "2xl": [scale["2xl"], { lineHeight: lineHeights.relaxed }],
-          "3xl": [scale["3xl"], { lineHeight: lineHeights.tight }],
-          "4xl": [scale["4xl"], { lineHeight: lineHeights.tight }],
-          "5xl": [scale["5xl"], { lineHeight: lineHeights.tight }],
-          "6xl": [scale["6xl"], { lineHeight: lineHeights.tight }],
-          "7xl": [scale["7xl"], { lineHeight: lineHeights.tight }],
+          xs: [scale.xs, { lineHeight: lineHeights.tight || '1.25' }],
+          sm: [scale.sm, { lineHeight: lineHeights.normal || '1.5' }],
+          base: [scale.base, { lineHeight: lineHeights.normal || '1.5' }],
+          lg: [scale.lg, { lineHeight: lineHeights.normal || '1.5' }],
+          xl: [scale.xl, { lineHeight: lineHeights.relaxed || '1.75' }],
+          "2xl": [scale["2xl"], { lineHeight: lineHeights.relaxed || '1.75' }],
+          "3xl": [scale["3xl"], { lineHeight: lineHeights.tight || '1.25' }],
+          "4xl": [scale["4xl"], { lineHeight: lineHeights.tight || '1.25' }],
+          "5xl": [scale["5xl"], { lineHeight: lineHeights.tight || '1.25' }],
+          "6xl": [scale["6xl"], { lineHeight: lineHeights.tight || '1.25' }],
         },
         lineHeight: lineHeights,
-        fontWeight: heading.weights,
+        fontWeight: weights,
       },
     },
   };
@@ -210,7 +204,7 @@ function generateTailwindConfig(system: ReturnType<typeof generateTypographySyst
  * Generate CSS classes for typography
  */
 function generateCSSClasses(system: ReturnType<typeof generateTypographySystem>): string {
-  const { heading, body, scale, lineHeights, mono } = system;
+  const { fonts, scale, lineHeights, weights } = system;
 
   let css = `/* Typography Classes */\n\n`;
 
@@ -224,7 +218,7 @@ function generateCSSClasses(system: ReturnType<typeof generateTypographySystem>)
   css += `  font-family: var(--font-body);\n`;
   css += `}\n\n`;
 
-  if (mono) {
+  if (fonts.mono) {
     css += `.font-mono {\n`;
     css += `  font-family: var(--font-mono);\n`;
     css += `}\n\n`;
@@ -293,10 +287,10 @@ function generateCSSClasses(system: ReturnType<typeof generateTypographySystem>)
  * Get pairing description
  */
 function getPairingDescription(system: ReturnType<typeof generateTypographySystem>): string {
-  const { heading, body, mono } = system;
-  let desc = `${heading.font} for headings and ${body.font} for body text`;
-  if (mono) {
-    desc += `, with ${mono.font} for code`;
+  const { fonts } = system;
+  let desc = `${fonts.heading} for headings and ${fonts.body} for body text`;
+  if (fonts.mono) {
+    desc += `, with ${fonts.mono} for code`;
   }
   return desc;
 }

@@ -23,7 +23,7 @@ const defaultComponents: Component[] = [
         <button className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium hover:opacity-90 transition-opacity">
           Primary Button
         </button>
-        <button className="px-4 py-2 rounded-lg glass border border-white/20 text-foreground font-medium hover:bg-white/5 transition-colors">
+        <button className="px-4 py-2 rounded-lg glass border-2 border-white/40 text-foreground font-medium hover:bg-white/20 transition-colors shadow-md">
           Secondary Button
         </button>
         <button className="px-4 py-2 rounded-lg text-purple-400 font-medium hover:bg-purple-500/10 transition-colors">
@@ -43,20 +43,20 @@ const defaultComponents: Component[] = [
         <input
           type="text"
           placeholder="Enter your email"
-          className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+          className="w-full px-4 py-2 rounded-lg bg-white/10 border-2 border-white/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50 shadow-lg shadow-black/50"
         />
         <input
           type="text"
           placeholder="Disabled input"
           disabled
-          className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-muted-foreground/50 cursor-not-allowed"
+          className="w-full px-4 py-2 rounded-lg bg-white/10 border-2 border-white/30 text-muted-foreground/50 cursor-not-allowed"
         />
       </div>
     ),
     code: `<input
   type="text"
   placeholder="Enter your email"
-  className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+  className="w-full px-4 py-2 rounded-lg bg-white/10 border-2 border-white/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50 shadow-lg shadow-black/50"
 />`,
   },
   {
@@ -175,15 +175,47 @@ export default function ComponentsTab() {
   // Use components from design system if available, otherwise use defaults
   const components = useMemo(() => {
     if (designSystem?.components && designSystem.components.length > 0) {
-      // Map design system components to Component format
-      return designSystem.components.map((comp, index) => {
-        // Find matching default component for preview
-        const defaultComp = defaultComponents.find((dc) => dc.name === comp.name);
+      // Map design system components to Component format with proper preview rendering
+      return designSystem.components.map((comp: any, index: number) => {
+        // Render generated HTML/CSS as preview
+        const renderGeneratedPreview = () => {
+          if (comp.code?.html && comp.code?.css) {
+            // Combine HTML and CSS for preview
+            return (
+              <div
+                className="w-full"
+                dangerouslySetInnerHTML={{
+                  __html: `
+                    <style>
+                      ${comp.code.css}
+                      /* Override any inherited dark theme styles */
+                      .default-card, .elevated-card, .outlined-card {
+                        color: inherit !important;
+                      }
+                      .default-card *, .elevated-card *, .outlined-card * {
+                        color: inherit !important;
+                      }
+                    </style>
+                    ${comp.code.html}
+                  `,
+                }}
+              />
+            );
+          }
+          
+          // Fallback to default preview if no HTML/CSS
+          const defaultComp = defaultComponents.find((dc) => 
+            dc.name.toLowerCase() === comp.name.toLowerCase() ||
+            comp.name.toLowerCase().includes(dc.name.toLowerCase())
+          );
+          return defaultComp?.preview || <div>Preview for {comp.name}</div>;
+        };
+
         return {
           id: comp.name.toLowerCase().replace(/\s+/g, "-"),
           name: comp.name,
-          preview: defaultComp?.preview || <div>Preview for {comp.name}</div>,
-          code: comp.code,
+          preview: renderGeneratedPreview(),
+          code: comp.code?.react || comp.code?.html || comp.code || 'No code available',
         };
       });
     }

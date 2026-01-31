@@ -7,7 +7,7 @@ import { useState, useCallback } from "react";
 import { handleDownload, handleDownloadWithLoading } from "@/lib/utils/downloadHandler";
 import type { DesignSystem } from "@/lib/exporters/cssExporter";
 import type { PackageOptions } from "@/lib/exporters/packageGenerator";
-import type { DesignSystemData } from "@/store/useDesignSystemStore";
+import type { DesignSystemData, ExportOptions } from "@/store/useDesignSystemStore";
 
 export interface UseDownloadReturn {
   download: (designSystem: DesignSystem | DesignSystemData, options?: PackageOptions, fileName?: string) => Promise<void>;
@@ -41,7 +41,7 @@ export function useDownload(): UseDownloadReturn {
   );
 
   return {
-    download,
+    download: download as any,
     isLoading,
     error,
   };

@@ -3,16 +3,25 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Performance optimizations
   reactStrictMode: false,
+  swcMinify: true, // Enable SWC minification for faster builds
   
   experimental: {
-    optimizePackageImports: ['@/components', '@/lib', 'lucide-react', 'framer-motion'],
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@clerk/nextjs',
+    ],
   },
 
-  // External packages for server components (moved from experimental)
-  serverExternalPackages: ['@prisma/client'],
+  // External packages for server components
+  serverExternalPackages: ['@prisma/client', 'prisma'],
 
-  // Allow Clerk images
+  // Allow Clerk images with optimizations
   images: {
+    formats: ['image/avif', 'image/webp'], // Modern formats for better compression
+    minimumCacheTTL: 31536000, // 1 year cache for static images
     remotePatterns: [
       {
         protocol: 'https',

@@ -141,7 +141,7 @@ export default function ShowcasePage() {
         <div className="fixed inset-0 gradient-subtle -z-10" />
         <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_50%)] -z-10" />
 
-        <div className="pt-24 pb-20 px-6">
+        <div className="pt-32 pb-20 px-6">
           <div className="max-w-7xl mx-auto">
             {/* Hero Section */}
             <motion.div

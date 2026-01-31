@@ -5,20 +5,19 @@ import { prisma } from '@/lib/prisma'
 // GET single design
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin()
+    const { id } = await params
 
     const design = await prisma.designSystem.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         user: {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
             role: true,
           },
         },
@@ -45,17 +44,18 @@ export async function GET(
 // PATCH update design
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin()
+    const { id } = await params
 
     const body = await request.json()
     const { featured, status } = body
 
     // Get current design state
     const currentDesign = await prisma.designSystem.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { featured: true, status: true, name: true },
     })
 
@@ -64,7 +64,7 @@ export async function PATCH(
     if (status) updates.status = status
 
     const design = await prisma.designSystem.update({
-      where: { id: params.id },
+      where: { id: id },
       data: updates,
     })
 
@@ -72,13 +72,13 @@ export async function PATCH(
     if (typeof featured === 'boolean' && currentDesign && featured !== currentDesign.featured) {
       await logAdminAction(
         featured ? 'featured_design' : 'unfeatured_design',
-        params.id,
+        id,
         { name: currentDesign.name }
       )
     }
 
     if (status && currentDesign && status !== currentDesign.status) {
-      await logAdminAction('changed_status', params.id, {
+      await logAdminAction('changed_status', id, {
         name: currentDesign.name,
         oldStatus: currentDesign.status,
         newStatus: status,
@@ -98,21 +98,22 @@ export async function PATCH(
 // DELETE design
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin()
+    const { id } = await params
 
     const design = await prisma.designSystem.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { name: true },
     })
 
     await prisma.designSystem.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
-    await logAdminAction('deleted_design', params.id, {
+    await logAdminAction('deleted_design', id, {
       name: design?.name,
     })
 

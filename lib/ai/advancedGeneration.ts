@@ -147,8 +147,8 @@ export function compareDesignVersions(
   const v1Accessibility = v1.colors?.accessibility || {};
   const v2Accessibility = v2.colors?.accessibility || {};
   const accessibilityImproved = 
-    (v2Accessibility.primaryOnWhite?.AA && !v1Accessibility.primaryOnWhite?.AA) ||
-    (v2Accessibility.primaryOnBlack?.AA && !v1Accessibility.primaryOnBlack?.AA);
+    ((v2Accessibility as any).primaryOnWhite?.AA && !(v1Accessibility as any).primaryOnWhite?.AA) ||
+    ((v2Accessibility as any).primaryOnBlack?.AA && !(v1Accessibility as any).primaryOnBlack?.AA);
 
   // Generate summary
   const changes: string[] = [];

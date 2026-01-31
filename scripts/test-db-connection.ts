@@ -3,7 +3,7 @@
  * Run with: npx tsx scripts/test-db-connection.ts
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../node_modules/.prisma/client';
 
 async function testDatabaseConnection() {
   console.log('🔍 Testing Neon Database Connection...\n');

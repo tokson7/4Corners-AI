@@ -77,7 +77,7 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
     // Handle OpenAI API errors
     if (error instanceof OpenAI.APIError) {
       // OpenAI-specific error
-      const apiError = error as OpenAI.APIError;
+      const apiError = error as InstanceType<typeof OpenAI.APIError>;
       throw new Error(
         `OpenAI API Error: ${apiError.message} (Status: ${apiError.status})`
       );

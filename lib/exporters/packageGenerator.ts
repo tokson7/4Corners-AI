@@ -29,6 +29,9 @@ export interface ExportOptions {
   html?: boolean;
 }
 
+// Type alias for backward compatibility
+export type PackageOptions = ExportOptions;
+
 /**
  * Generate README content for the export package
  * 

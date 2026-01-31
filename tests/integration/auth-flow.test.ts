@@ -38,7 +38,7 @@ describe('Authentication Flow Integration', () => {
         method: 'GET',
       })
 
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -88,7 +88,7 @@ describe('Authentication Flow Integration', () => {
         method: 'GET',
       })
 
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -105,7 +105,7 @@ describe('Authentication Flow Integration', () => {
         method: 'GET',
       })
 
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -122,7 +122,7 @@ describe('Authentication Flow Integration', () => {
         method: 'GET',
       })
 
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -250,7 +250,7 @@ describe('Authentication Flow Integration', () => {
         method: 'GET',
       })
 
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       // Profile endpoint should still work for banned users to show status
@@ -285,7 +285,7 @@ describe('Authentication Flow Integration', () => {
         method: 'GET',
       })
 
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -322,7 +322,7 @@ describe('Authentication Flow Integration', () => {
         method: 'GET',
       })
 
-      await GET(request)
+      await GET()
 
       expect(mockPrisma.user.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -360,7 +360,7 @@ describe('Authentication Flow Integration', () => {
         method: 'GET',
       })
 
-      const response = await GET(request)
+      const response = await GET()
 
       expect(response.status).toBe(200)
       expect(mockPrisma.user.upsert).toHaveBeenCalledWith(

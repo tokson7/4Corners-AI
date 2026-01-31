@@ -3,6 +3,9 @@ import Anthropic from '@anthropic-ai/sdk'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { GenerationTier, TIER_CONFIGS } from '@/types/design-system'
 
+// Re-export for convenience
+export type { GenerationTier } from '@/types/design-system'
+
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null
@@ -115,9 +118,14 @@ export interface TypeScale {
 // ============================================
 
 export async function generateDesignSystem(
-  prompt: DesignSystemPrompt,
+  promptOrString: DesignSystemPrompt | string,
   tier: GenerationTier = 'basic'
 ): Promise<GeneratedDesignSystem> {
+  // Handle both string and object inputs
+  const prompt: DesignSystemPrompt = typeof promptOrString === 'string'
+    ? { brandDescription: promptOrString }
+    : promptOrString
+
   console.log('🎨 [AI GENERATOR] Starting design system generation...')
   console.log('🎨 [AI GENERATOR] Brand:', prompt.brandDescription)
   console.log(`🎨 [AI GENERATOR] Tier: ${tier.toUpperCase()}`)

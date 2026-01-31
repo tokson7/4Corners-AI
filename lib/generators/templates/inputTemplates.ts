@@ -68,7 +68,7 @@ export const ${capitalize(variant)}Input: React.FC<${capitalize(variant)}InputPr
           border: isFocused ? '${styles.focusBorder}' : '${styles.border}',
           fontSize: '${styles.fontSize}',
           fontWeight: '${styles.fontWeight}',
-          fontFamily: '${typography.fonts.body}',
+          fontFamily: '${typography.fonts?.body || 'Inter, sans-serif'}',
           outline: 'none',
           transition: 'all 0.2s ease',
           boxShadow: isFocused ? \`0 0 0 3px \${String('${palette.primary.main}').substring(0, 7)}22\` : 'none',
@@ -164,7 +164,7 @@ const isFocused = ref(false);
   border: ${styles.border};
   font-size: ${styles.fontSize};
   font-weight: ${styles.fontWeight};
-  font-family: ${typography.fonts.body};
+  font-family: ${typography.fonts?.body || 'Inter, sans-serif'};
   outline: none;
   transition: all 0.2s ease;
 }
@@ -251,7 +251,7 @@ export function generateSvelteInput(
     border: ${styles.border};
     font-size: ${styles.fontSize};
     font-weight: ${styles.fontWeight};
-    font-family: ${typography.fonts.body};
+    font-family: ${typography.fonts?.body || 'Inter, sans-serif'};
     outline: none;
     transition: all 0.2s ease;
   }
@@ -322,7 +322,7 @@ export function generateCSSInput(
   border: ${styles.border};
   font-size: ${styles.fontSize};
   font-weight: ${styles.fontWeight};
-  font-family: ${typography.fonts.body};
+  font-family: ${typography.fonts?.body || 'Inter, sans-serif'};
   outline: none;
   transition: all 0.2s ease;
 }

@@ -80,6 +80,44 @@ function getColorShade(shades: any, shade: number | string, fallback: string): s
 }
 
 /**
+ * Ensure we get a light background color for cards
+ * Falls back to white if neutrals are not light enough
+ */
+function getSafeCardBackground(palette: ColorPaletteResponse): string {
+  const neutral50 = palette.neutrals?.[50];
+  if (!neutral50) return '#ffffff';
+  
+  // Check if the color is actually light (brightness > 200)
+  const hex = neutral50.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  
+  // If it's not light enough, use white
+  return brightness > 200 ? neutral50 : '#ffffff';
+}
+
+/**
+ * Ensure we get a dark text color for cards
+ * Falls back to dark gray if neutrals are not dark enough
+ */
+function getSafeCardText(palette: ColorPaletteResponse): string {
+  const neutral900 = palette.neutrals?.[900];
+  if (!neutral900) return '#111827';
+  
+  // Check if the color is actually dark (brightness < 100)
+  const hex = neutral900.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  
+  // If it's not dark enough, use dark gray
+  return brightness < 100 ? neutral900 : '#111827';
+}
+
+/**
  * Generate button variants with design tokens
  */
 export function generateButtonVariants(
@@ -179,21 +217,23 @@ export function generateCardVariants(
       variant: 'default',
       description: 'Standard card with subtle shadow',
       styles: {
-        backgroundColor: palette.neutrals[50] || '#ffffff',
+        backgroundColor: getSafeCardBackground(palette),
+        color: getSafeCardText(palette),
         padding: '1.5rem',
         borderRadius: '0.75rem',
-        border: `1px solid ${palette.neutrals[200] || '#e5e7eb'}`,
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+        border: `2px solid ${palette.neutrals[300] || '#d1d5db'}`,
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1)',
       },
     },
     {
       variant: 'elevated',
       description: 'Card with prominent shadow for emphasis',
       styles: {
-        backgroundColor: palette.neutrals[50] || '#ffffff',
+        backgroundColor: getSafeCardBackground(palette),
+        color: getSafeCardText(palette),
         padding: '1.5rem',
         borderRadius: '0.75rem',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 10px 15px rgba(0, 0, 0, 0.2), 0 4px 6px rgba(0, 0, 0, 0.1)',
       },
     },
     {
@@ -201,6 +241,7 @@ export function generateCardVariants(
       description: 'Card with border and no shadow',
       styles: {
         backgroundColor: 'transparent',
+        color: palette.neutrals[50] || '#f9fafb',
         padding: '1.5rem',
         borderRadius: '0.75rem',
         border: `2px solid ${palette.neutrals[300] || '#d1d5db'}`,
@@ -241,7 +282,7 @@ export function generateInputVariants(
         color: palette.neutrals[900] || '#111827',
         padding: '0.75rem 1rem',
         borderRadius: '0.5rem',
-        border: `1px solid ${palette.neutrals[300] || '#d1d5db'}`,
+        border: `2px solid ${palette.neutrals[400] || '#9ca3af'}`,
         focusBorder: `2px solid ${palette.primary.main}`,
         fontSize: scale.base,
         fontWeight: String(weights.regular || 400),
@@ -292,11 +333,11 @@ export function generateAlertVariants(
       variant: 'success',
       description: 'Success message alert',
       styles: {
-        backgroundColor: `${palette.semantic.success.main}10`,
-        color: getColorShade(palette.semantic.success.shades, 700, palette.semantic.success.main),
+        backgroundColor: `${palette.semantic.success.main}30`,
+        color: getColorShade(palette.semantic.success.shades, 900, '#065f46'),
         padding: '1rem 1.25rem',
         borderRadius: '0.5rem',
-        border: `1px solid ${palette.semantic.success.main}30`,
+        border: `2px solid ${palette.semantic.success.main}80`,
         fontSize: scale.sm,
         fontWeight: String(weights.medium || 500),
       },
@@ -305,11 +346,11 @@ export function generateAlertVariants(
       variant: 'error',
       description: 'Error message alert',
       styles: {
-        backgroundColor: `${palette.semantic.error.main}10`,
-        color: getColorShade(palette.semantic.error.shades, 700, palette.semantic.error.main),
+        backgroundColor: `${palette.semantic.error.main}30`,
+        color: getColorShade(palette.semantic.error.shades, 900, '#7f1d1d'),
         padding: '1rem 1.25rem',
         borderRadius: '0.5rem',
-        border: `1px solid ${palette.semantic.error.main}30`,
+        border: `2px solid ${palette.semantic.error.main}80`,
         fontSize: scale.sm,
         fontWeight: String(weights.medium || 500),
       },
@@ -318,11 +359,11 @@ export function generateAlertVariants(
       variant: 'warning',
       description: 'Warning message alert',
       styles: {
-        backgroundColor: `${palette.semantic.warning.main}10`,
-        color: getColorShade(palette.semantic.warning.shades, 700, palette.semantic.warning.main),
+        backgroundColor: `${palette.semantic.warning.main}30`,
+        color: getColorShade(palette.semantic.warning.shades, 900, '#78350f'),
         padding: '1rem 1.25rem',
         borderRadius: '0.5rem',
-        border: `1px solid ${palette.semantic.warning.main}30`,
+        border: `2px solid ${palette.semantic.warning.main}80`,
         fontSize: scale.sm,
         fontWeight: String(weights.medium || 500),
       },
@@ -331,11 +372,11 @@ export function generateAlertVariants(
       variant: 'info',
       description: 'Informational alert',
       styles: {
-        backgroundColor: `${palette.semantic.info.main}10`,
-        color: getColorShade(palette.semantic.info.shades, 700, palette.semantic.info.main),
+        backgroundColor: `${palette.semantic.info.main}30`,
+        color: getColorShade(palette.semantic.info.shades, 900, '#1e3a8a'),
         padding: '1rem 1.25rem',
         borderRadius: '0.5rem',
-        border: `1px solid ${palette.semantic.info.main}30`,
+        border: `2px solid ${palette.semantic.info.main}80`,
         fontSize: scale.sm,
         fontWeight: String(weights.medium || 500),
       },

@@ -31,6 +31,16 @@ model User {
   plan      String   @default("free") // free, pro, enterprise
   credits   Int      @default(10) // Generation credits
   
+  // Free Trial System
+  freeGenerationsUsed  Int      @default(0)  // Track free trial usage
+  freeGenerationsLimit Int      @default(3)  // Free trial limit (3 generations)
+  
+  // Stripe Integration
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+  
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -77,10 +87,10 @@ model DesignSystem {
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([userId])
+  @@index([userId, createdAt(sort: Desc)]) // Composite index for fast dashboard queries
   @@index([tier]) // Index for filtering by generation tier
   @@index([isPublic])
   @@index([createdAt])
-  @@index([userId, createdAt(sort: Desc)]) // Composite index for fast user queries
   @@index([userId, tier]) // Composite index for user tier queries
   @@map("design_systems")
 }
@@ -151,4 +161,16 @@ model AdminLog {
   @@index([createdAt])
   @@index([action])
   @@map("admin_logs")
+}
+
+// ApiWaitlist model - tracks API waitlist signups
+model ApiWaitlist {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("website") // "website", "social", "referral", etc.
+  createdAt DateTime @default(now())
+  
+  @@index([email])
+  @@index([createdAt])
+  @@map("api_waitlist")
 }

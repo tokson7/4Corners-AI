@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
+import { Pool } from 'pg'
 
 /**
  * Prisma Client Instance
@@ -22,8 +23,13 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient() {
+  // Create Postgres connection pool
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  })
+  
   // Create Prisma Pg adapter (Prisma 7 pattern)
-  const adapter = new PrismaPg(process.env.DATABASE_URL as string)
+  const adapter = new PrismaPg(pool)
   
   // Create Prisma client with adapter
   // The adapter will connect when first query is made

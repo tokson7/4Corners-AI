@@ -66,7 +66,21 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    '/(api|trpc)(.*)',
+    // Only run middleware on protected routes (removes 200ms overhead from public pages)
+    '/dashboard/:path*',
+    '/generate/:path*',
+    '/account/:path*',
+    '/billing/:path*',
+    '/admin/:path*',
+    '/api/design-systems/:path*',
+    '/api/user/:path*',
+    '/api/billing/:path*',
+    '/api/account/:path*',
+    '/api/admin/:path*',
+    '/api/stripe/create-checkout-session', // Stripe checkout requires auth
+    '/api/stripe/create-portal-session',  // Stripe portal requires auth
+    '/api/generate-design-system',        // Design system generation requires auth
+    '/api/generate/colors',               // Color generation requires auth
+    '/api/generate-components',           // Component generation requires auth
   ],
 }

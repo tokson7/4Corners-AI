@@ -47,76 +47,169 @@ const generateSampleComponents = (): GeneratedComponent[] => {
   const samplePalette = {
     primary: {
       name: 'Primary',
+      main: '#8b5cf6',
       shades: {
-        50: { hex: '#f5f3ff' },
-        100: { hex: '#ede9fe' },
-        200: { hex: '#ddd6fe' },
-        300: { hex: '#c4b5fd' },
-        400: { hex: '#a78bfa' },
-        500: { hex: '#8b5cf6' },
-        600: { hex: '#7c3aed' },
-        700: { hex: '#6d28d9' },
-        800: { hex: '#5b21b6' },
-        900: { hex: '#4c1d95' },
+        50: '#f5f3ff',
+        100: '#ede9fe',
+        200: '#ddd6fe',
+        300: '#c4b5fd',
+        400: '#a78bfa',
+        500: '#8b5cf6',
+        600: '#7c3aed',
+        700: '#6d28d9',
+        800: '#5b21b6',
+        900: '#4c1d95',
       },
     },
-    neutral: {
-      name: 'Neutral',
+    secondary: {
+      name: 'Secondary',
+      main: '#10b981',
       shades: {
-        50: { hex: '#f9fafb' },
-        100: { hex: '#f3f4f6' },
-        200: { hex: '#e5e7eb' },
-        300: { hex: '#d1d5db' },
-        400: { hex: '#9ca3af' },
-        500: { hex: '#6b7280' },
-        600: { hex: '#4b5563' },
-        700: { hex: '#374151' },
-        800: { hex: '#1f2937' },
-        900: { hex: '#111827' },
+        50: '#ecfdf5',
+        100: '#d1fae5',
+        200: '#a7f3d0',
+        300: '#6ee7b7',
+        400: '#34d399',
+        500: '#10b981',
+        600: '#059669',
+        700: '#047857',
+        800: '#065f46',
+        900: '#064e3b',
       },
+    },
+    accent: {
+      name: 'Accent',
+      main: '#f59e0b',
+      shades: {
+        50: '#fffbeb',
+        100: '#fef3c7',
+        200: '#fde68a',
+        300: '#fcd34d',
+        400: '#fbbf24',
+        500: '#f59e0b',
+        600: '#d97706',
+        700: '#b45309',
+        800: '#92400e',
+        900: '#78350f',
+      },
+    },
+    neutrals: {
+      50: '#f9fafb',
+      100: '#f3f4f6',
+      200: '#e5e7eb',
+      300: '#d1d5db',
+      400: '#9ca3af',
+      500: '#6b7280',
+      600: '#4b5563',
+      700: '#374151',
+      800: '#1f2937',
+      900: '#111827',
     },
     semantic: {
       success: {
-        name: 'Success',
+        main: '#10b981',
         shades: {
-          500: { hex: '#10b981' },
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          200: '#a7f3d0',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
         },
       },
       error: {
-        name: 'Error',
+        main: '#ef4444',
         shades: {
-          500: { hex: '#ef4444' },
+          50: '#fef2f2',
+          100: '#fee2e2',
+          200: '#fecaca',
+          300: '#fca5a5',
+          400: '#f87171',
+          500: '#ef4444',
+          600: '#dc2626',
+          700: '#b91c1c',
+          800: '#991b1b',
+          900: '#7f1d1d',
         },
       },
       warning: {
-        name: 'Warning',
+        main: '#f59e0b',
         shades: {
-          500: { hex: '#f59e0b' },
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
+          800: '#92400e',
+          900: '#78350f',
         },
       },
       info: {
-        name: 'Info',
+        main: '#3b82f6',
         shades: {
-          500: { hex: '#3b82f6' },
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
         },
       },
+    },
+    accessibility: {
+      primaryOnWhite: { ratio: 4.5, AA: true, AAA: false },
+      primaryOnBlack: { ratio: 7.2, AA: true, AAA: true },
     },
   }
 
   const sampleTypography = {
-    fontPairs: [
-      {
-        heading: { family: 'Inter', fallback: 'sans-serif' },
-        body: { family: 'Inter', fallback: 'sans-serif' },
-      },
-    ],
-    typeScale: {
+    fonts: {
+      heading: 'Inter, sans-serif',
+      body: 'Inter, sans-serif',
+      mono: 'Fira Code, monospace',
+    },
+    scale: {
       xs: '0.75rem',
       sm: '0.875rem',
       base: '1rem',
       lg: '1.125rem',
       xl: '1.25rem',
+      '2xl': '1.5rem',
+      '3xl': '1.875rem',
+      '4xl': '2.25rem',
+      '5xl': '3rem',
+      '6xl': '3.75rem',
     },
+    weights: {
+      regular: 400,
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700,
+    },
+    lineHeights: {
+      tight: 1.2,
+      normal: 1.5,
+      relaxed: 1.75,
+    },
+    letterSpacing: {
+      tight: '-0.025em',
+      normal: '0',
+      wide: '0.025em',
+    },
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap',
+    personality: 'Modern and clean',
   }
 
   return generateAllComponentsWithTemplates(samplePalette as any, sampleTypography as any)
@@ -153,9 +246,9 @@ export default function ComponentsShowcase() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pb-20 pt-20">
       {/* Header */}
-      <div className="border-b border-white/10 bg-black/20 backdrop-blur-xl sticky top-0 z-50">
+      <div className="border-b border-white/10 bg-black/20 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-6">
           <Link 
             href="/#showcase"

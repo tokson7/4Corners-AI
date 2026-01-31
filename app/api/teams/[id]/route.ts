@@ -70,7 +70,7 @@ export async function PATCH(
       );
     }
 
-    const teamId = params.id;
+    const { id: teamId } = await params;
     const team = teamsStore.get(teamId);
 
     if (!team) {

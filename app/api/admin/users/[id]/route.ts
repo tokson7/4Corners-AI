@@ -5,13 +5,14 @@ import { prisma } from '@/lib/prisma'
 // GET single user
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin()
+    const { id } = await params
 
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         designSystems: {
           orderBy: { createdAt: 'desc' },
@@ -49,18 +50,18 @@ export async function GET(
 // PATCH update user
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin()
+    const { id } = await params
 
     const body = await request.json()
     const { credits, role, banned } = body
 
     // Get current user state
     const currentUser = await prisma.user.findUnique({
-      where: { id: params.id },
-      select: { credits: true, role: true, banned: true },
+      where: { id },
     })
 
     const updates: any = {}
@@ -69,7 +70,7 @@ export async function PATCH(
     if (typeof banned === 'boolean') updates.banned = banned
 
     const user = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: updates,
     })
 
@@ -77,12 +78,12 @@ export async function PATCH(
     if (typeof credits === 'number' && currentUser) {
       const diff = credits - currentUser.credits
       if (diff > 0) {
-        await logAdminAction('added_credits', params.id, {
+        await logAdminAction('added_credits', id, {
           amount: diff,
           newTotal: credits,
         })
       } else if (diff < 0) {
-        await logAdminAction('removed_credits', params.id, {
+        await logAdminAction('removed_credits', id, {
           amount: Math.abs(diff),
           newTotal: credits,
         })
@@ -90,14 +91,14 @@ export async function PATCH(
     }
 
     if (role && currentUser && role !== currentUser.role) {
-      await logAdminAction('changed_role', params.id, {
+      await logAdminAction('changed_role', id, {
         oldRole: currentUser.role,
         newRole: role,
       })
     }
 
     if (typeof banned === 'boolean' && currentUser && banned !== currentUser.banned) {
-      await logAdminAction(banned ? 'banned_user' : 'unbanned_user', params.id, {
+      await logAdminAction(banned ? 'banned_user' : 'unbanned_user', id, {
         reason: body.reason || 'No reason provided',
       })
     }
@@ -115,14 +116,15 @@ export async function PATCH(
 // DELETE user
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin()
+    const { id } = await params
 
     // Get user info before deleting
     const adminUser = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { clerkId: true, email: true },
     })
 
@@ -134,10 +136,10 @@ export async function DELETE(
     }
 
     await prisma.user.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
-    await logAdminAction('deleted_user', params.id, {
+    await logAdminAction('deleted_user', id, {
       email: adminUser.email,
     })
 

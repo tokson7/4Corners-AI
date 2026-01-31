@@ -23,7 +23,33 @@ export async function POST(req: NextRequest) {
     console.log('🧩 [COMPONENTS] Raw data received:', {
       paletteKeys: palette ? Object.keys(palette) : [],
       typographyKeys: typography ? Object.keys(typography) : [],
+      hasPalette: !!palette,
+      hasTypography: !!typography,
     });
+    
+    // Deep log for debugging
+    if (palette) {
+      console.log('🎨 [COMPONENTS] Palette structure:', {
+        hasPrimary: !!palette.primary,
+        hasSecondary: !!palette.secondary,
+        hasAccent: !!palette.accent,
+        hasSemantic: !!palette.semantic,
+        hasNeutrals: !!palette.neutrals,
+        hasNeutral: !!(palette as any).neutral,
+        primaryMain: palette.primary?.main || 'N/A',
+        neutralsType: palette.neutrals ? typeof palette.neutrals : (palette as any).neutral ? 'has neutral' : 'none',
+      });
+    }
+    
+    if (typography) {
+      console.log('📝 [COMPONENTS] Typography structure:', {
+        hasScale: !!(typography as any).scale,
+        hasTypeScale: !!(typography as any).typeScale,
+        hasFontPairs: !!(typography as any).fontPairs,
+        hasFonts: !!(typography as any).fonts,
+        hasWeights: !!(typography as any).weights,
+      });
+    }
 
     if (!palette || !typography) {
       console.error('❌ [COMPONENTS] Missing required fields');
@@ -60,21 +86,161 @@ export async function POST(req: NextRequest) {
       };
     }
 
+    // Add fonts structure if missing
+    if (typography && !typography.fonts) {
+      console.log('🔧 [COMPONENTS] Adding default fonts structure');
+      const typographyAny = typography as any;
+      
+      // Try to extract fonts from fontPairs if available
+      if (typographyAny.fontPairs && typographyAny.fontPairs[0]) {
+        const pair = typographyAny.fontPairs[0];
+        typography = {
+          ...typography,
+          fonts: {
+            heading: pair.heading?.family || 'Inter, sans-serif',
+            body: pair.body?.family || 'Inter, sans-serif',
+            mono: 'Fira Code, monospace',
+          },
+        };
+      } else {
+        // Use defaults
+        typography = {
+          ...typography,
+          fonts: {
+            heading: 'Inter, sans-serif',
+            body: 'Inter, sans-serif',
+            mono: 'Fira Code, monospace',
+          },
+        };
+      }
+    }
+
+    // Add other required typography properties if missing
+    if (typography && !typography.lineHeights) {
+      typography = {
+        ...typography,
+        lineHeights: {
+          tight: 1.2,
+          normal: 1.5,
+          relaxed: 1.75,
+        },
+      };
+    }
+
+    if (typography && !typography.letterSpacing) {
+      typography = {
+        ...typography,
+        letterSpacing: {
+          tight: '-0.025em',
+          normal: '0',
+          wide: '0.025em',
+        },
+      };
+    }
+
+    if (typography && !typography.googleFontsUrl) {
+      typography = {
+        ...typography,
+        googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+      };
+    }
+
+    if (typography && !typography.personality) {
+      typography = {
+        ...typography,
+        personality: 'Modern and clean',
+      };
+    }
+
     // Transform palette if it has old structure (neutral instead of neutrals)
     if (palette && !palette.neutrals && (palette as any).neutral) {
       console.log('🔧 [COMPONENTS] Transforming palette structure (neutral → neutrals)');
       const paletteAny = palette as any;
+      const neutral = paletteAny.neutral;
+      
+      // Handle different neutral structures
+      if (neutral.shades) {
+        // If neutral has shades property (ColorPalette structure from AI)
+        // Extract hex values from shade objects
+        const extractedShades: Record<string, string> = {};
+        for (const [key, value] of Object.entries(neutral.shades)) {
+          if (typeof value === 'string') {
+            extractedShades[key] = value;
+          } else if (value && typeof value === 'object' && 'hex' in value) {
+            extractedShades[key] = (value as any).hex;
+          }
+        }
+        palette = {
+          ...palette,
+          neutrals: extractedShades as any,
+        };
+      } else if (typeof neutral[50] === 'string' || typeof neutral['50'] === 'string') {
+        // Already in correct format
+        palette = {
+          ...palette,
+          neutrals: neutral,
+        };
+      } else if (neutral[50]?.hex || neutral['50']?.hex) {
+        // Shades are objects with hex property
+        const extractedShades: Record<string, string> = {};
+        for (const [key, value] of Object.entries(neutral)) {
+          if (typeof value === 'string') {
+            extractedShades[key] = value;
+          } else if (value && typeof value === 'object' && 'hex' in value) {
+            extractedShades[key] = (value as any).hex;
+          }
+        }
+        palette = {
+          ...palette,
+          neutrals: extractedShades as any,
+        };
+      } else {
+        console.warn('⚠️ [COMPONENTS] Unknown neutral structure, using defaults');
+        palette = {
+          ...palette,
+          neutrals: {
+            50: '#fafafa',
+            100: '#f4f4f5',
+            200: '#e4e4e7',
+            300: '#d4d4d8',
+            400: '#a1a1aa',
+            500: '#71717a',
+            600: '#52525b',
+            700: '#3f3f46',
+            800: '#27272a',
+            900: '#18181b',
+          } as any,
+        };
+      }
+    }
+    
+    // Ensure neutrals exist with fallback
+    if (!palette.neutrals) {
+      console.warn('⚠️ [COMPONENTS] No neutrals found, using defaults');
       palette = {
         ...palette,
-        neutrals: paletteAny.neutral.shades || paletteAny.neutral,
+        neutrals: {
+          50: '#fafafa',
+          100: '#f4f4f5',
+          200: '#e4e4e7',
+          300: '#d4d4d8',
+          400: '#a1a1aa',
+          500: '#71717a',
+          600: '#52525b',
+          700: '#3f3f46',
+          800: '#27272a',
+          900: '#18181b',
+        } as any,
       };
     }
 
     console.log('🧩 [COMPONENTS] After transformation:', {
       hasScale: !!typography.scale,
       hasWeights: !!typography.weights,
+      hasFonts: !!typography.fonts,
       hasNeutrals: !!palette.neutrals,
       hasPrimary: !!palette.primary,
+      fontsValue: typography.fonts ? JSON.stringify(typography.fonts) : 'undefined',
     });
 
     // Generate all components using the enhanced template-based generator

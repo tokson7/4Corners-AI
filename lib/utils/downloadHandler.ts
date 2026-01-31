@@ -3,7 +3,7 @@
  * Handles downloading design system packages as ZIP files
  */
 
-import { generateZIPPackage } from "@/lib/exporters/packageGenerator";
+import { generateExportPackage } from "@/lib/exporters/packageGenerator";
 import type { DesignSystem } from "@/lib/exporters/cssExporter";
 import type { PackageOptions } from "@/lib/exporters/packageGenerator";
 import type { DesignSystemData } from "@/store/useDesignSystemStore";
@@ -33,7 +33,7 @@ function convertDesignSystem(storeData: DesignSystemData): DesignSystem {
     neutrals[neutral.value] = neutral.hex;
   });
 
-  return {
+  return ({
     colors: {
       primary: {
         hex: storeData.colors.primary.hex,
@@ -52,7 +52,7 @@ function convertDesignSystem(storeData: DesignSystemData): DesignSystem {
     },
     typography: storeData.typography,
     spacing: storeData.spacing,
-  };
+  } as any);
 }
 
 /**
@@ -74,7 +74,7 @@ export async function handleDownload(
         : (designSystem as DesignSystem);
 
     // Step 1: Generate ZIP package
-    const zipBlob = await generateZIPPackage(convertedSystem, options);
+    const zipBlob = await generateExportPackage(convertedSystem, options);
 
     // Step 2: Create object URL
     const url = URL.createObjectURL(zipBlob);

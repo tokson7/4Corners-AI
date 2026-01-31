@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Download, Copy, Check } from "lucide-react";
-import { useDesignSystemStore } from "@/store/useDesignSystemStore";
+import { useDesignSystemStore, type ExportOptions } from "@/store/useDesignSystemStore";
 import { useDownload } from "@/hooks/useDownload";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { canExport } from "@/lib/subscription";
@@ -14,7 +14,7 @@ import { trackEvent } from "@/lib/analytics/trackEvent";
 import { useUser } from "@/lib/hooks/useUser";
 
 interface ExportFormat {
-  id: keyof ReturnType<typeof useDesignSystemStore>["exportOptions"];
+  id: keyof ExportOptions;
   label: string;
   pro?: boolean;
 }
@@ -77,18 +77,18 @@ export default function ExportTab() {
   const handleDownload = async () => {
     // Check if user can export
     if (!canUserExport) {
-      showError("Upgrade required", "Export is a Pro feature. Please upgrade to continue.");
+      showError("Upgrade required: Export is a Pro feature. Please upgrade to continue.");
       return;
     }
 
     const selectedFormats = Object.entries(exportOptions).filter(([_, value]) => value);
     if (selectedFormats.length === 0) {
-      showError("No formats selected", "Please select at least one format to export.");
+      showError("No formats selected. Please select at least one format to export.");
       return;
     }
 
     if (!designSystem) {
-      showError("No design system", "Please generate a design system first.");
+      showError("No design system. Please generate a design system first.");
       return;
     }
 
@@ -134,7 +134,7 @@ export default function ExportTab() {
         }).catch(() => {});
       }
 
-      success("Download started", "Your design system package is being downloaded.");
+      success("Download started: Your design system package is being downloaded.");
     } catch (err) {
       // Track export failure
       if (user?.id) {
@@ -151,7 +151,7 @@ export default function ExportTab() {
         }).catch(() => {});
       }
 
-      showError("Download failed", err instanceof Error ? err.message : "Failed to download package.");
+      showError(err instanceof Error ? `Download failed: ${err.message}` : "Failed to download package.");
     }
   };
 
@@ -202,7 +202,7 @@ export default function ExportTab() {
                     onChange={() => {
                       // Prevent selecting premium formats if not subscribed
                       if (format.pro && !canUserExport) {
-                        showError("Upgrade required", `${format.label} is a Pro feature. Please upgrade to access.`);
+                        showError(`Upgrade required: ${format.label} is a Pro feature. Please upgrade to access.`);
                         return;
                       }
                       toggleExportOption(format.id);

@@ -5,7 +5,7 @@
  * Extends the default Tailwind theme with custom colors and typography.
  */
 
-import type { ColorPaletteResponse, TypographySystem } from '@/lib/types/designSystem';
+import type { ColorPaletteResponse, TypographySystem, ColorShades, Neutrals } from '@/lib/types/designSystem';
 
 /**
  * Export design tokens as Tailwind CSS configuration
@@ -28,7 +28,7 @@ export function exportTailwindConfig(
   });
 
   // Format color shades for Tailwind
-  const formatShades = (shades: Record<number, string>) => {
+  const formatShades = (shades: ColorShades | Neutrals | Record<number, string>) => {
     return JSON.stringify(shades, null, 8).replace(/\n/g, '\n        ');
   };
 

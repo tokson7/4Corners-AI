@@ -76,8 +76,15 @@ export async function createOrUpdateUser(
         firstName,
         lastName,
         plan,
-        credits: 10, // Default free tier credits
+        credits: 0,                      // No paid credits initially
+        freeGenerationsUsed: 0,          // Haven't used any free trials yet
+        freeGenerationsLimit: 3,         // 3 free trials for all new users
       },
+    })
+
+    console.log('✅ User created with free trial:', {
+      email: newUser.email,
+      freeLimit: newUser.freeGenerationsLimit,
     })
 
     // Send welcome and admin notification emails (async, don't block)

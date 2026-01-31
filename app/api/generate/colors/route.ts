@@ -11,6 +11,9 @@ import { generateDesignSystem } from '@/lib/ai/design-generator'
 import { GenerationTier, TIER_CONFIGS } from '@/types/design-system'
 import { requireUser } from '@/lib/utils/auth'
 import { deductCredits } from '@/lib/services/user-service'
+import { auth } from '@clerk/nextjs/server'
+import { prisma } from '@/lib/prisma'
+import { canUserGenerate, QUALITY_TIERS } from '@/lib/generation/quality-tiers'
 
 // ============================================
 // REQUEST VALIDATION
@@ -81,7 +84,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           success: false,
           error: 'Validation failed',
           details: validationError instanceof z.ZodError 
-            ? validationError.errors 
+            ? validationError.issues 
             : 'Invalid request format',
         },
         { 
@@ -118,65 +121,90 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     console.log(`   Anthropic: ${hasAnthropic ? '✅' : '❌'}`)
 
     // Step 3.5: Authenticate user and check credits
+    console.log('💳 Step 3.5: Authenticating user and checking access...')
+    
+    const { userId } = await auth()
+    
+    if (!userId) {
+      console.error('❌ No user ID - authentication required')
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Authentication required',
+          details: 'Please sign in to generate design systems',
+        },
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    // Fetch user with free trial fields
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: {
+        id: true,
+        clerkId: true,
+        email: true,
+        plan: true,
+        credits: true,
+        freeGenerationsUsed: true,
+        freeGenerationsLimit: true,
+      },
+    })
+
+    if (!user) {
+      console.error('❌ User not found in database')
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'User not found',
+          details: 'User account not found in database',
+        },
+        { 
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    console.log('✅ User authenticated:', user.email)
+    console.log(`   Plan: ${user.plan}`)
+    console.log(`   Credits: ${user.credits}`)
+    console.log(`   Free trials used: ${user.freeGenerationsUsed}/${user.freeGenerationsLimit}`)
+
+    // Check if user can generate using free trial system
+    const accessCheck = canUserGenerate(user)
+    
+    if (!accessCheck.canGenerate) {
+      console.error(`❌ Access denied: ${accessCheck.reason}`)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'LIMIT_REACHED',
+          message: accessCheck.reason,
+          freeTrialsRemaining: 0,
+          upgradeRequired: true,
+        },
+        { 
+          status: 403,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    const qualityTier = accessCheck.tier!
+    const isFreeTrialGeneration = accessCheck.freeTrialsRemaining !== undefined
+    const isAdmin = user.email === 'zaridze2909@gmail.com'
+
+    console.log('✅ Access granted')
+    console.log(`   Quality tier: ${qualityTier}`)
+    console.log(`   Free trial: ${isFreeTrialGeneration}`)
+    console.log(`   Free trials remaining: ${accessCheck.freeTrialsRemaining || 'N/A'}`)
+    
     const tier = validated.tier as GenerationTier
     const tierConfig = TIER_CONFIGS[tier]
-    
-    console.log('💳 Step 3.5: Checking user credits...')
-    console.log(`   Tier: ${tier.toUpperCase()}`)
-    console.log(`   Cost: ${tierConfig.credits} credits`)
-    console.log(`   Expected time: ${tierConfig.estimatedTime}`)
-    console.log(`   Features: ${tierConfig.features.length} features`)
-    
-    // 🔥 TEST MODE: Skip authentication for testing
-    const TEST_MODE = process.env.NODE_ENV === 'development'
-    let user: any = null
-    
-    if (TEST_MODE) {
-      console.log('⚡ TEST MODE ENABLED - Skipping authentication')
-      console.log('⚡ This is for TESTING ONLY - auth will be required in production')
-      user = {
-        id: 'test-user',
-        credits: 999, // Unlimited credits for testing
-      }
-    } else {
-      try {
-        user = await requireUser()
-        console.log('✅ User authenticated:', user.id)
-        console.log(`   Current credits: ${user.credits}`)
-      } catch (authError) {
-        console.error('❌ Authentication failed:', authError)
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Authentication required',
-            details: 'Please sign in to generate design systems',
-          },
-          { 
-            status: 401,
-            headers: { 'Content-Type': 'application/json' }
-          }
-        )
-      }
-      
-      // Check if user has enough credits
-      if (user.credits < tierConfig.credits) {
-        console.error(`❌ Insufficient credits: need ${tierConfig.credits}, have ${user.credits}`)
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Insufficient credits',
-            details: `You need ${tierConfig.credits} credits but only have ${user.credits}`,
-            required: tierConfig.credits,
-            available: user.credits,
-            tier,
-          },
-          { 
-            status: 402, // Payment Required
-            headers: { 'Content-Type': 'application/json' }
-          }
-        )
-      }
-    }
     
     console.log('✅ Credit check passed')
 
@@ -212,21 +240,35 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       )
     }
 
-    // Step 4.5: Deduct credits
-    console.log('💳 Step 4.5: Deducting credits...')
-    if (TEST_MODE) {
-      console.log('⚡ TEST MODE - Skipping credit deduction')
-    } else {
-      try {
-        await deductCredits(user.id, tierConfig.credits)
-        const remainingCredits = user.credits - tierConfig.credits
-        console.log(`✅ Credits deducted: ${tierConfig.credits}`)
-        console.log(`   Remaining credits: ${remainingCredits}`)
-      } catch (creditError) {
-        console.error('❌ Failed to deduct credits:', creditError)
-        // Log but don't fail - generation already succeeded
-        console.warn('⚠️  Generation succeeded but credit deduction failed')
+    // Step 4.5: Deduct credits or increment free trial usage
+    console.log('💳 Step 4.5: Processing usage...')
+    
+    if (!isAdmin) {
+      if (isFreeTrialGeneration) {
+        // Increment free trial counter
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            freeGenerationsUsed: { increment: 1 },
+          },
+        })
+        
+        const newRemaining = user.freeGenerationsLimit - user.freeGenerationsUsed - 1
+        console.log(`✅ Free trial used. Remaining: ${newRemaining}`)
+      } else {
+        // Deduct paid credit
+        try {
+          await deductCredits(user.id, tierConfig.credits)
+          const remainingCredits = user.credits - tierConfig.credits
+          console.log(`✅ Credits deducted: ${tierConfig.credits}`)
+          console.log(`   Remaining credits: ${remainingCredits}`)
+        } catch (creditError) {
+          console.error('❌ Failed to deduct credits:', creditError)
+          console.warn('⚠️  Generation succeeded but credit deduction failed')
+        }
       }
+    } else {
+      console.log('👑 Admin user - no charge')
     }
 
     // Step 5: Validate generated data
@@ -258,7 +300,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Step 6: Return success response
     const duration = Date.now() - startTime
-    const remainingCredits = TEST_MODE ? 999 : (user.credits - tierConfig.credits)
+    let remainingCredits = user.credits
+    let creditsUsed = 0
+    
+    if (!isAdmin) {
+      if (isFreeTrialGeneration) {
+        remainingCredits = user.credits // Free trial doesn't use credits
+        creditsUsed = 0
+      } else {
+        remainingCredits = user.credits - tierConfig.credits
+        creditsUsed = tierConfig.credits
+      }
+    }
+    
     console.log('✅ ============================================')
     console.log(`✅ GENERATION COMPLETE in ${duration}ms`)
     console.log(`✅ Tier: ${tier.toUpperCase()}`)
@@ -266,11 +320,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     console.log(`✅ Colors: ${totalShades} shades across ${colorPaletteCount} palettes`)
     console.log(`✅ Typography: ${fontPairsCount} curated pairings`)
     console.log(`✅ Estimated variations: ${totalShades * fontPairsCount}+`)
-    console.log(`💳 Credits used: ${TEST_MODE ? 0 : tierConfig.credits}`)
-    console.log(`💳 Credits remaining: ${remainingCredits}`)
-    if (TEST_MODE) {
-      console.log('⚡ TEST MODE - Results NOT saved to database')
+    
+    if (isAdmin) {
+      console.log(`👑 Admin - No charges applied`)
+    } else if (isFreeTrialGeneration) {
+      console.log(`🆓 Free trial used (${accessCheck.freeTrialsRemaining! - 1} remaining)`)
+    } else {
+      console.log(`💳 Credits used: ${creditsUsed}`)
+      console.log(`💳 Credits remaining: ${remainingCredits}`)
     }
+    
     console.log('✅ ============================================')
 
     // DEBUG: Log the response structure being sent to client
@@ -295,9 +354,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         designSystem,
         tier,
         credits: {
-          used: TEST_MODE ? 0 : tierConfig.credits,
-          remaining: TEST_MODE ? 999 : (user.credits - tierConfig.credits),
+          used: creditsUsed,
+          remaining: remainingCredits,
         },
+        freeTrialsRemaining: isFreeTrialGeneration ? accessCheck.freeTrialsRemaining! - 1 : undefined,
         stats: {
           generationTime: duration,
           colorPalettes: colorPaletteCount,
@@ -306,7 +366,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           possibleVariations: totalShades * fontPairsCount,
         },
         aiGenerated: true,
-        testMode: TEST_MODE,
       },
       { 
         status: 200,

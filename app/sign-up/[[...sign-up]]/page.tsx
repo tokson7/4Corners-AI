@@ -74,7 +74,6 @@ export default function SignUpPage() {
                 },
               }}
               signInUrl="/sign-in"
-              afterSignUpUrl="/dashboard"
             />
           </motion.div>
 

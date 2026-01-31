@@ -60,7 +60,7 @@ export const ${capitalize(variant)}Alert: React.FC<${capitalize(variant)}AlertPr
         border: '${styles.border}',
         fontSize: '${styles.fontSize}',
         fontWeight: '${styles.fontWeight}',
-        fontFamily: '${typography.fonts.body}',
+        fontFamily: '${typography.fonts?.body || 'Inter, sans-serif'}',
       }}
       role="alert"
     >
@@ -169,7 +169,7 @@ const emit = defineEmits<{
   border: ${styles.border};
   font-size: ${styles.fontSize};
   font-weight: ${styles.fontWeight};
-  font-family: ${typography.fonts.body};
+  font-family: ${typography.fonts?.body || 'Inter, sans-serif'};
 }
 
 .alert-icon {
@@ -265,7 +265,7 @@ export function generateSvelteAlert(
     border: ${styles.border};
     font-size: ${styles.fontSize};
     font-weight: ${styles.fontWeight};
-    font-family: ${typography.fonts.body};
+    font-family: ${typography.fonts?.body || 'Inter, sans-serif'};
   }
 
   .alert-icon {
@@ -344,7 +344,7 @@ export function generateCSSAlert(
   border: ${styles.border};
   font-size: ${styles.fontSize};
   font-weight: ${styles.fontWeight};
-  font-family: ${typography.fonts.body};
+  font-family: ${typography.fonts?.body || 'Inter, sans-serif'};
 }
 
 .alert-icon {

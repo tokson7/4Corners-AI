@@ -7,6 +7,7 @@ import type { ColorPaletteResponse, TypographySystem } from '@/lib/types/designS
 
 interface CardStyles {
   backgroundColor: string;
+  color?: string;
   padding: string;
   borderRadius: string;
   border?: string;
@@ -40,6 +41,7 @@ export const ${capitalize(variant)}Card: React.FC<${capitalize(variant)}CardProp
       className={\`${variant}-card \${className}\`}
       style={{
         backgroundColor: '${styles.backgroundColor}',
+        ${styles.color ? `color: '${styles.color}',` : ''}
         padding: '${styles.padding}',
         borderRadius: '${styles.borderRadius}',
         border: '${styles.border || 'none'}',
@@ -54,7 +56,7 @@ export const ${capitalize(variant)}Card: React.FC<${capitalize(variant)}CardProp
             fontWeight: '${styles.titleWeight || typography.weights.semibold}',
             color: '${styles.titleColor || palette.neutrals[900]}',
             marginBottom: '1rem',
-            fontFamily: '${typography.fonts.heading}',
+            fontFamily: '${typography.fonts?.heading || 'Inter, sans-serif'}',
           }}
         >
           {title}
@@ -92,6 +94,7 @@ defineProps<Props>();
 <style scoped>
 .${variant}-card {
   background-color: ${styles.backgroundColor};
+  ${styles.color ? `color: ${styles.color};` : ''}
   padding: ${styles.padding};
   border-radius: ${styles.borderRadius};
   border: ${styles.border || 'none'};
@@ -104,7 +107,7 @@ defineProps<Props>();
   font-weight: ${styles.titleWeight || typography.weights.semibold};
   color: ${styles.titleColor || palette.neutrals[900]};
   margin-bottom: 1rem;
-  font-family: ${typography.fonts.heading};
+  font-family: ${typography.fonts?.heading || 'Inter, sans-serif'};
 }
 
 .${variant}-card:hover {
@@ -136,6 +139,7 @@ export function generateSvelteCard(
 <style>
   .${variant}-card {
     background-color: ${styles.backgroundColor};
+    ${styles.color ? `color: ${styles.color};` : ''}
     padding: ${styles.padding};
     border-radius: ${styles.borderRadius};
     border: ${styles.border || 'none'};
@@ -148,7 +152,7 @@ export function generateSvelteCard(
     font-weight: ${styles.titleWeight || typography.weights.semibold};
     color: ${styles.titleColor || palette.neutrals[900]};
     margin-bottom: 1rem;
-    font-family: ${typography.fonts.heading};
+    font-family: ${typography.fonts?.heading || 'Inter, sans-serif'};
   }
 
   .${variant}-card:hover {
@@ -179,8 +183,7 @@ export function generateCSSCard(
   typography: TypographySystem
 ): string {
   return `.${variant}-card {
-  background-color: ${styles.backgroundColor};
-  padding: ${styles.padding};
+  background-color: ${styles.backgroundColor};  ${styles.color ? `color: ${styles.color};` : ''}  padding: ${styles.padding};
   border-radius: ${styles.borderRadius};
   border: ${styles.border || 'none'};
   ${styles.boxShadow ? `box-shadow: ${styles.boxShadow};` : ''}
@@ -192,7 +195,7 @@ export function generateCSSCard(
   font-weight: ${styles.titleWeight || typography.weights.semibold};
   color: ${styles.titleColor || palette.neutrals[900]};
   margin-bottom: 1rem;
-  font-family: ${typography.fonts.heading};
+  font-family: ${typography.fonts?.heading || 'Inter, sans-serif'};
 }
 
 .${variant}-card:hover {

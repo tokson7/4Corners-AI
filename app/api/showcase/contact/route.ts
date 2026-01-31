@@ -110,12 +110,12 @@ export async function POST(req: NextRequest) {
 
     // Handle validation errors
     if (error instanceof z.ZodError) {
-      console.log('❌ [CONTACT] Zod validation error:', error.errors)
+      console.log('❌ [CONTACT] Zod validation error:', error.issues)
       return NextResponse.json(
         {
           success: false,
           message: 'Validation failed',
-          errors: error.errors.map((e) => ({
+          errors: error.issues.map((e) => ({
             field: e.path.join('.'),
             message: e.message,
           })),

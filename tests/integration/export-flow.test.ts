@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { generateCSS } from '@/components/generator/DesignSystemDisplay'
+// CSS generation is handled internally by the DesignSystemDisplay component
 
 describe('Export Functionality Integration', () => {
   beforeEach(() => {

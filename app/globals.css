@@ -92,6 +92,41 @@
 }
 
 /* ===================================
+   FAST CSS ANIMATIONS (Performance Optimized)
+   Replace Framer Motion for public pages
+   =================================== */
+
+@keyframes fast-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fast-fade-in {
+  animation: fast-fade-in 0.15s ease-out forwards;
+  /* GPU acceleration for better performance */
+  will-change: opacity, transform;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}
+
+/* ===================================
    REMOVE ALL CLERK BRANDING
    =================================== */
 

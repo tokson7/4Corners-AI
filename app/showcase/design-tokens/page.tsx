@@ -41,7 +41,7 @@ export default function DesignTokensShowcase() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-24">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pb-20 pt-20">
       {/* Header */}
       <div className="border-b border-white/10 bg-black/20 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-6">
@@ -60,7 +60,7 @@ export default function DesignTokensShowcase() {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-12 space-y-12">
+      <div className="container mx-auto px-4 py-12 space-y-12 max-w-7xl">
         
         {/* Color Tokens */}
         <section>

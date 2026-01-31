@@ -107,7 +107,9 @@ export default function Hero() {
               Design Systems,
             </span>
             <br />
-            <span className="text-foreground">Powered by AI</span>
+            <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+              4 you
+            </span>
           </motion.h1>
 
           <motion.div

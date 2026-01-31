@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
-import { generateDesignSystem, validateAPIKey } from '@/lib/ai/design-generator';
+import { generateDesignSystem } from '@/lib/ai/design-generator';
 import { logger, setRequestContext, generateRequestId, logApiRequest, logApiResponse, logApiError, logGenerationEvent } from '@/lib/logger';
 import { applyRateLimit, generateRateLimit } from '@/lib/rate-limit';
+import { canUserGenerate, getUserQualityTier, QUALITY_TIERS } from '@/lib/generation/quality-tiers';
 import type { GenerationTier } from '@/lib/ai/design-generator';
 
 /**
@@ -115,53 +116,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check OpenAI API key
-    if (!validateAPIKey()) {
+    // Check user credits
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: {
+        id: true,
+        clerkId: true,
+        email: true,
+        plan: true,
+        credits: true,
+        freeGenerationsUsed: true,
+        freeGenerationsLimit: true,
+      },
+    });
+
+    if (!user) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Configuration error',
-          message: 'AI service is not configured. Please contact support.',
+          error: 'User not found',
+          message: 'User account not found.',
         },
         {
-          status: 503,
+          status: 404,
           headers: { 'Content-Type': 'application/json' },
         }
       );
     }
 
-    // Check usage limits
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
-    let usageMetrics = await prisma.usageMetrics.findUnique({
-      where: {
-        userId_month: {
-          userId,
-          month: startOfMonth,
-        },
-      },
+    console.log('🔍 [GENERATE] User check:', {
+      email: user.email,
+      plan: user.plan,
+      credits: user.credits,
+      freeUsed: user.freeGenerationsUsed,
+      freeLimit: user.freeGenerationsLimit,
     });
 
-    // Create metrics if don't exist
-    if (!usageMetrics) {
-      usageMetrics = await prisma.usageMetrics.create({
-        data: {
-          userId,
-          month: startOfMonth,
-          generationsUsed: 0,
-          generationLimit: 10, // Free tier default
-        },
-      });
-    }
-
-    // Check if user has exceeded limit
-    if (usageMetrics.generationsUsed >= usageMetrics.generationLimit) {
+    // Check if user can generate using free trial system
+    const accessCheck = canUserGenerate(user);
+    
+    if (!accessCheck.canGenerate) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Limit exceeded',
-          message: `You've reached your monthly limit of ${usageMetrics.generationLimit} generations. Upgrade your plan for more.`,
+          error: 'LIMIT_REACHED',
+          message: accessCheck.reason,
+          freeTrialsRemaining: 0,
+          upgradeRequired: true,
         },
         {
           status: 403,
@@ -170,86 +171,107 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate design system using AI
-    logGenerationEvent('start', tier as string, undefined, {
-      brandDescription: brandDescription.substring(0, 100),
-      usageMetrics: {
-        used: usageMetrics.generationsUsed,
-        limit: usageMetrics.generationLimit,
-      },
-    });
+    // Get quality tier and config
+    const qualityTier = accessCheck.tier!;
+    const tierConfig = QUALITY_TIERS[qualityTier];
     
-    // Add 60-second timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      logger.warn({
-        context: 'api-timeout',
-        userId,
-        tier,
-        timeout: 60000,
-        message: 'Aborting generation after 60 seconds',
-      });
-      controller.abort();
-    }, 60000); // 60 seconds
+    console.log('✅ [GENERATE] Access granted:', {
+      tier: qualityTier,
+      config: tierConfig.description,
+      freeTrialsRemaining: accessCheck.freeTrialsRemaining,
+    });
+
+    // Generate design system using AI
+    logGenerationEvent('start', qualityTier, undefined, {
+      brandDescription: brandDescription.substring(0, 100),
+      userCredits: user.credits,
+      tier: qualityTier,
+      configUsed: tierConfig.description,
+    });
 
     let result;
     try {
-      result = await generateDesignSystem(brandDescription, tier as GenerationTier, controller.signal);
-      clearTimeout(timeoutId);
+      // Use quality tier from free trial system
+      result = await generateDesignSystem(brandDescription, qualityTier as GenerationTier);
       
-      logGenerationEvent('complete', tier as string, result.metadata.generationTime, {
-        tokenCount: result.metadata.tokenCount,
-        componentsGenerated: 0, // DesignSystemResult doesn't have components
+      logGenerationEvent('complete', qualityTier, undefined, {
+        componentsGenerated: 0,
         colorsGenerated: Object.keys(result.colors || {}).length,
       });
     } catch (error: any) {
-      clearTimeout(timeoutId);
-      
-      // Handle timeout specifically
-      if (error.name === 'AbortError') {
-        logger.error({
-          context: 'api-timeout-error',
-          userId,
-          tier,
-          duration: Date.now() - startTime,
-          message: 'Request timeout after 60 seconds',
-        });
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Request timeout',
-            message: 'Generation took too long and was cancelled. Please try again with a simpler description.',
-          },
-          {
-            status: 408,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-      }
-      
-      // Re-throw other errors to be handled by outer catch
+      // Re-throw errors to be handled by outer catch
       throw error;
     }
 
     // Save design system to database
     const designSystem = await prisma.designSystem.create({
       data: {
-        userId,
-        name: `${tier.charAt(0).toUpperCase() + tier.slice(1)} Design System - ${new Date().toLocaleDateString()}`,
+        userId: user.id,
+        name: `${qualityTier.charAt(0).toUpperCase() + qualityTier.slice(1)} Design System - ${new Date().toLocaleDateString()}`,
         description: brandDescription,
-        colors: result.colors,
-        typography: result.typography,
+        tier: qualityTier,
+        colors: result.colors as any,
+        typography: result.typography as any,
         components: [],
+        metadata: {
+          qualityTier,
+          isFreeTrialGeneration: accessCheck.freeTrialsRemaining !== undefined,
+        },
       },
     });
 
-    // Increment usage counter
-    await prisma.usageMetrics.update({
-      where: { id: usageMetrics.id },
+    // Deduct credits or increment free trial usage
+    const isAdmin = user.email === 'zaridze2909@gmail.com';
+    const isFreeTrialGeneration = accessCheck.freeTrialsRemaining !== undefined;
+    
+    if (!isAdmin) {
+      if (isFreeTrialGeneration) {
+        // Increment free trial counter
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            freeGenerationsUsed: { increment: 1 },
+          },
+        });
+        
+        const newRemaining = user.freeGenerationsLimit - user.freeGenerationsUsed - 1;
+        console.log('🆓 [GENERATE] Free trial used. Remaining:', newRemaining);
+      } else {
+        // Deduct paid credit
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            credits: { decrement: 1 },
+          },
+        });
+        
+        console.log('💳 [GENERATE] Credit deducted. New balance:', user.credits - 1);
+      }
+    } else {
+      console.log('👑 [GENERATE] Admin user - no charge');
+    }
+
+    // Track usage in metrics
+    await prisma.usageMetrics.create({
       data: {
-        generationsUsed: usageMetrics.generationsUsed + 1,
+        userId: user.id,
+        action: 'generate_design_system',
+        creditsUsed: isFreeTrialGeneration ? 0 : 1,
+        success: true,
+        designSystemId: designSystem.id,
+        metadata: {
+          tier: qualityTier,
+          aiProvider: result.metadata?.aiProvider || 'openai',
+          isFreeTrialUser: isFreeTrialGeneration,
+          isAdmin,
+        } as any,
       },
     });
+
+    // Calculate remaining credits/trials
+    const newFreeRemaining = isFreeTrialGeneration 
+      ? user.freeGenerationsLimit - user.freeGenerationsUsed - 1
+      : undefined;
 
     // Return success response
     return NextResponse.json(
@@ -261,16 +283,18 @@ export async function POST(request: NextRequest) {
           typography: result.typography,
           components: [],
           metadata: {
-            tier,
-            generationTime: result.metadata.generationTime,
-            tokensUsed: result.metadata.tokenCount,
-            responseSize: result.metadata.responseSize,
+            tier: qualityTier,
           },
-          usageMetrics: {
-            used: usageMetrics.generationsUsed + 1,
-            limit: usageMetrics.generationLimit,
-            remaining: usageMetrics.generationLimit - (usageMetrics.generationsUsed + 1),
+          credits: {
+            remaining: !isFreeTrialGeneration ? user.credits - 1 : undefined,
           },
+        },
+        generationInfo: {
+          tier: qualityTier,
+          quality: tierConfig.description,
+          isFreeTrialUser: isFreeTrialGeneration,
+          freeTrialsRemaining: newFreeRemaining,
+          creditsRemaining: !isFreeTrialGeneration ? user.credits - 1 : undefined,
         },
       },
       {
@@ -281,7 +305,7 @@ export async function POST(request: NextRequest) {
     
     // Log successful response
     logApiResponse('POST', '/api/generate-design-system', 200, Date.now() - startTime, {
-      tier,
+      tier: qualityTier,
       tokensUsed: result.metadata.tokenCount,
       componentsGenerated: result.components?.length || 0,
     });

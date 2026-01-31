@@ -94,12 +94,12 @@ export async function GET(req: NextRequest) {
             id: subscriptions.data[0].id,
             status: subscriptions.data[0].status,
             currentPeriodStart: new Date(
-              subscriptions.data[0].current_period_start * 1000
+              (subscriptions.data[0] as any).current_period_start * 1000
             ).toISOString(),
             currentPeriodEnd: new Date(
-              subscriptions.data[0].current_period_end * 1000
+              (subscriptions.data[0] as any).current_period_end * 1000
             ).toISOString(),
-            cancelAtPeriodEnd: subscriptions.data[0].cancel_at_period_end,
+            cancelAtPeriodEnd: (subscriptions.data[0] as any).cancel_at_period_end,
             plan: subscriptions.data[0].items.data[0]?.price?.nickname || "Team",
           }
         : null;
@@ -167,12 +167,12 @@ export async function GET(req: NextRequest) {
           id: subscriptions.data[0].id,
           status: subscriptions.data[0].status,
           currentPeriodStart: new Date(
-            subscriptions.data[0].current_period_start * 1000
+            (subscriptions.data[0] as any).current_period_start * 1000
           ).toISOString(),
           currentPeriodEnd: new Date(
-            subscriptions.data[0].current_period_end * 1000
+            (subscriptions.data[0] as any).current_period_end * 1000
           ).toISOString(),
-          cancelAtPeriodEnd: subscriptions.data[0].cancel_at_period_end,
+          cancelAtPeriodEnd: (subscriptions.data[0] as any).cancel_at_period_end,
           plan: subscriptions.data[0].items.data[0]?.price?.nickname || "Pro",
         }
       : null;

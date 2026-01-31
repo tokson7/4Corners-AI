@@ -225,17 +225,7 @@ function ComponentCard({ component, framework }: { component: GeneratedComponent
       <div className="p-6">
         {!showCode ? (
           /* Preview */
-          <div className="bg-gradient-to-br from-white/5 to-white/10 rounded-lg p-8 min-h-[200px] flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <Code2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">
-                Interactive preview coming soon
-              </p>
-              <p className="text-xs mt-1">
-                View the code to copy and use this component
-              </p>
-            </div>
-          </div>
+          <ComponentPreview component={component} framework={framework} />
         ) : (
           /* Code Display */
           <div className="relative">
@@ -276,6 +266,149 @@ function ComponentCard({ component, framework }: { component: GeneratedComponent
           <span>{code.split('\n').length} lines</span>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Component Preview Renderer
+ * Safely renders React components and provides HTML/CSS previews
+ */
+function ComponentPreview({ component, framework }: { component: GeneratedComponent; framework: Framework }) {
+  if (framework === 'react') {
+    return <ReactComponentPreview code={component.code.react} />;
+  }
+  
+  if (framework === 'html') {
+    return <HTMLComponentPreview html={component.code.html} css={component.code.css} />;
+  }
+  
+  // For Vue and Svelte, show code structure preview
+  return (
+    <div className="bg-gradient-to-br from-white/5 to-white/10 rounded-lg p-8 min-h-[200px]">
+      <div className="text-center text-muted-foreground mb-4">
+        <Eye className="w-12 h-12 mx-auto mb-3 opacity-50" />
+        <p className="text-sm font-medium">
+          {framework === 'vue' ? 'Vue' : 'Svelte'} Component Structure
+        </p>
+        <p className="text-xs mt-1">
+          Switch to Code tab to copy the full component
+        </p>
+      </div>
+      <div className="max-w-2xl mx-auto bg-black/20 rounded-lg p-4">
+        <pre className="text-xs text-muted-foreground overflow-x-auto">
+          {framework === 'vue' ? component.code.vue.split('\n').slice(0, 15).join('\n') : 
+           component.code.svelte.split('\n').slice(0, 15).join('\n')}
+          {'\n...\n'}
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * React Component Preview
+ * Renders React components in an iframe for isolation
+ */
+function ReactComponentPreview({ code }: { code: string }) {
+  const [previewHtml, setPreviewHtml] = useState('');
+  
+  useState(() => {
+    // Extract the component content for preview
+    // This creates a safe isolated preview
+    const componentMatch = code.match(/export default function \w+\(\) \{([\s\S]*)\}/);
+    
+    if (componentMatch) {
+      const jsxContent = componentMatch[1].trim();
+      // Remove return statement if present
+      const cleanJsx = jsxContent.replace(/^return\s*\(?\s*/, '').replace(/\)?\s*;?\s*$/, '');
+      
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body {
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                background: transparent;
+                font-family: system-ui, -apple-system, sans-serif;
+              }
+            </style>
+          </head>
+          <body>
+            ${cleanJsx}
+          </body>
+        </html>
+      `;
+      setPreviewHtml(html);
+    }
+  });
+
+  if (!previewHtml) {
+    return (
+      <div className="bg-gradient-to-br from-white/5 to-white/10 rounded-lg p-8 min-h-[200px] flex items-center justify-center">
+        <div className="text-center text-muted-foreground">
+          <Eye className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p className="text-sm">Rendering preview...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-br from-white/5 to-white/10 rounded-lg p-8 min-h-[200px] flex items-center justify-center">
+      <iframe
+        srcDoc={previewHtml}
+        className="w-full min-h-[200px] border-0 rounded-lg bg-white/5"
+        title="Component Preview"
+        sandbox="allow-same-origin"
+      />
+    </div>
+  );
+}
+
+/**
+ * HTML/CSS Component Preview
+ * Renders HTML with CSS in an iframe
+ */
+function HTMLComponentPreview({ html, css }: { html: string; css: string }) {
+  const previewHtml = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: transparent;
+            font-family: system-ui, -apple-system, sans-serif;
+          }
+          ${css}
+        </style>
+      </head>
+      <body>
+        ${html}
+      </body>
+    </html>
+  `;
+
+  return (
+    <div className="bg-gradient-to-br from-white/5 to-white/10 rounded-lg p-8 min-h-[200px] flex items-center justify-center">
+      <iframe
+        srcDoc={previewHtml}
+        className="w-full min-h-[200px] border-0 rounded-lg bg-white/5"
+        title="Component Preview"
+        sandbox="allow-same-origin"
+      />
     </div>
   );
 }

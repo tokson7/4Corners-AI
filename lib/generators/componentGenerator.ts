@@ -51,12 +51,12 @@ export function generateButtonComponent(
   const secondary700 = palette.secondary.shades[700];
   const grayWhite = palette.neutrals[50];
   
-  // Extract typography
-  const fontBody = typography.fonts.body;
-  const fontSemibold = typography.weights.semibold;
-  const textSm = typography.scale.sm;
-  const textBase = typography.scale.base;
-  const textLg = typography.scale.lg;
+  // Extract typography with safe fallbacks
+  const fontBody = typography.fonts?.body || 'Inter, sans-serif';
+  const fontSemibold = typography.weights?.semibold || 600;
+  const textSm = typography.scale?.sm || '0.875rem';
+  const textBase = typography.scale?.base || '1rem';
+  const textLg = typography.scale?.lg || '1.125rem';
 
   // React Component
   const react = `import React from 'react';
@@ -435,11 +435,11 @@ export function generateInputComponent(
   const gray100 = palette.neutrals[100];
   const gray700 = palette.neutrals[700];
   
-  // Extract typography
-  const fontBody = typography.fonts.body;
-  const textSm = typography.scale.sm;
-  const textBase = typography.scale.base;
-  const fontMedium = typography.weights.medium;
+  // Extract typography with safe fallbacks
+  const fontBody = typography.fonts?.body || 'Inter, sans-serif';
+  const textSm = typography.scale?.sm || '0.875rem';
+  const textBase = typography.scale?.base || '1rem';
+  const fontMedium = typography.weights?.medium || 500;
 
   // React Component
   const react = `import React, { useState } from 'react';
