@@ -12,7 +12,7 @@ if (!stripeSecretKey || stripeSecretKey.startsWith('sk_test_YOUR_')) {
 
 // Initialize Stripe even with dummy key to prevent crashes
 export const stripe = new Stripe(stripeSecretKey || 'sk_test_dummy', {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2026-01-28.clover',
   typescript: true,
 });
 

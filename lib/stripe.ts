@@ -14,7 +14,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
  * Used for creating checkout sessions, managing subscriptions, and webhook handling
  */
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-12-15.clover',
+  apiVersion: '2026-01-28.clover',
   typescript: true,
   appInfo: {
     name: 'DesignForge AI',

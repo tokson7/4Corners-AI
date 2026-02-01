@@ -3,7 +3,7 @@
  * Verifies webhook signatures to prevent unauthorized requests
  */
 
-import { stripe } from "@/lib/stripe/client";
+import { stripe } from "@/lib/stripe/config";
 
 /**
  * Verify Stripe webhook signature

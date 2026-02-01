@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "npm install --legacy-peer-deps && next build",
-    "vercel-build": "npm install --legacy-peer-deps && next build",
+    "build": "prisma generate && next build",
+    "vercel-build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",

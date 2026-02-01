@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Performance optimizations
   reactStrictMode: false,
-  swcMinify: true, // Enable SWC minification for faster builds
+  // Note: swcMinify is now enabled by default in Next.js 15+
   
   experimental: {
     optimizePackageImports: [

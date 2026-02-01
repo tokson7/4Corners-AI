@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/utils/auth";
-import { stripe, STRIPE_PRICE_IDS } from "@/lib/stripe/client";
+import { stripe, STRIPE_PLANS } from "@/lib/stripe/config";
 import { trackEventServer } from "@/lib/analytics/trackEvent";
 
 export async function POST(req: NextRequest) {
@@ -19,8 +19,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get price ID
-    const selectedPriceId = priceId || STRIPE_PRICE_IDS[plan as "pro" | "team"];
+    // Get price ID from STRIPE_PLANS
+    const planKey = plan === "team" ? "enterprise" : "pro";
+    const selectedPriceId = priceId || STRIPE_PLANS[planKey]?.priceId;
     if (!selectedPriceId) {
       return NextResponse.json(
         { error: "Price ID not configured" },

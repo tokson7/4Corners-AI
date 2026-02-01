@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { stripe } from "@/lib/stripe/client";
+import { stripe } from "@/lib/stripe/config";
 
 /**
  * GET /api/billing/history
