@@ -15,8 +15,11 @@ export async function isAdmin(): Promise<boolean> {
     })
 
     return user?.role === 'ADMIN' && !user.banned
-  } catch (error) {
-    console.error('Admin check failed:', error)
+  } catch (error: any) {
+    // Don't log dynamic server usage errors (expected during static generation)
+    if (error?.digest !== 'DYNAMIC_SERVER_USAGE') {
+      console.error('Admin check failed:', error)
+    }
     return false
   }
 }

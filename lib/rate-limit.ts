@@ -3,17 +3,38 @@ import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 
+// Check if we're in a build environment or missing Redis config
+const isBuildTime = process.env.NODE_ENV === 'production' && !process.env.UPSTASH_REDIS_REST_URL;
+const hasRedisConfig = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+
 // Initialize Redis client - will use environment variables
 // UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
 let redis: Redis;
 
-try {
-  redis = Redis.fromEnv();
-} catch (error) {
-  logger.warn('Redis configuration not found, rate limiting will be disabled in development', {
-    error: error instanceof Error ? error.message : 'Unknown error'
-  });
-  // Create a mock redis for development
+if (hasRedisConfig) {
+  try {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL!,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+    });
+  } catch (error) {
+    // Only log if not at build time
+    if (!isBuildTime) {
+      logger.warn('Redis initialization failed, using mock', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+    // Create a mock redis for development
+    redis = {
+      get: async () => null,
+      set: async () => 'OK',
+      incr: async () => 1,
+      expire: async () => 1,
+      eval: async () => null,
+    } as any;
+  }
+} else {
+  // Create a mock redis when config is missing (build time or development)
   redis = {
     get: async () => null,
     set: async () => 'OK',

@@ -11,7 +11,7 @@
  * - Edit/Delete actions
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Download, Trash2, Share2, Loader2, Edit } from 'lucide-react';
 import Link from 'next/link';
@@ -41,13 +41,7 @@ export default function DesignSystemDetailPage() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (params.id) {
-      fetchSystem();
-    }
-  }, [params.id]);
-
-  const fetchSystem = async () => {
+  const fetchSystem = useCallback(async () => {
     try {
       const res = await fetch(`/api/design-systems/${params.id}`);
       
@@ -64,7 +58,13 @@ export default function DesignSystemDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    if (params.id) {
+      fetchSystem();
+    }
+  }, [params.id, fetchSystem]);
 
   const handleDelete = async () => {
     if (!confirm(`Delete "${system?.name}"? This action cannot be undone.`)) {

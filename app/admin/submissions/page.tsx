@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Download, Eye, Trash2, Check } from 'lucide-react'
 
@@ -20,11 +20,7 @@ export default function SubmissionsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all') // all, new, read, replied
 
-  useEffect(() => {
-    fetchSubmissions()
-  }, [filter])
-
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     try {
       const response = await fetch(`/api/admin/submissions?status=${filter}`)
       const data = await response.json()
@@ -34,7 +30,11 @@ export default function SubmissionsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filter])
+
+  useEffect(() => {
+    fetchSubmissions()
+  }, [fetchSubmissions])
 
   const exportToCSV = () => {
     const csv = [

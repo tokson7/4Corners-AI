@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Search, UserPlus, Filter, MoreVertical, Ban, Shield, Coins, Trash2 } from 'lucide-react'
 import {
   Table,
@@ -70,11 +70,7 @@ export default function UsersPage() {
     (filters.minCredits ? 1 : 0) +
     (filters.maxCredits ? 1 : 0)
 
-  useEffect(() => {
-    fetchUsers()
-  }, [search, pagination.page, filters])
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -110,7 +106,11 @@ export default function UsersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [search, pagination.page, pagination.limit, filters])
+
+  useEffect(() => {
+    fetchUsers()
+  }, [fetchUsers])
 
   const handleBanUser = async (userId: string, currentBanned: boolean) => {
     if (!confirm(`Are you sure you want to ${currentBanned ? 'unban' : 'ban'} this user?`)) {

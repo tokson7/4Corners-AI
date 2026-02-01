@@ -85,7 +85,7 @@ export default function ColorsTab() {
           { name: "Warning", hex: "#F59E0B", displayName: "Amber" },
           { name: "Info", hex: "#3B82F6", displayName: "Blue" },
         ];
-  }, [designSystem?.colors?.semantic]);
+  }, [designSystem?.colors]);
 
   // Memoize neutral grays calculation
   const neutralGrays = useMemo(() => {
@@ -140,14 +140,14 @@ export default function ColorsTab() {
   // Update colors when design system changes
   useEffect(() => {
     if (designSystem?.colors) {
-      setColors([
+      setColors(prevColors => [
         {
           name: "primary",
           hex: designSystem.colors.primary.hex,
           displayName: designSystem.colors.primary.name,
           psychology: designSystem.colors.primary.psychology,
           shades: designSystem.colors.primary.shades,
-          locked: colors.find((c) => c.name === "primary")?.locked || false,
+          locked: prevColors.find((c) => c.name === "primary")?.locked || false,
         },
         {
           name: "secondary",
@@ -155,7 +155,7 @@ export default function ColorsTab() {
           displayName: designSystem.colors.secondary.name,
           psychology: designSystem.colors.secondary.psychology,
           shades: designSystem.colors.secondary.shades,
-          locked: colors.find((c) => c.name === "secondary")?.locked || false,
+          locked: prevColors.find((c) => c.name === "secondary")?.locked || false,
         },
         {
           name: "accent",
@@ -163,11 +163,11 @@ export default function ColorsTab() {
           displayName: designSystem.colors.accent.name,
           psychology: designSystem.colors.accent.psychology,
           shades: designSystem.colors.accent.shades,
-          locked: colors.find((c) => c.name === "accent")?.locked || false,
+          locked: prevColors.find((c) => c.name === "accent")?.locked || false,
         },
       ]);
     }
-  }, [designSystem]);
+  }, [designSystem?.colors]);
 
   const handleLock = (colorName: string) => {
     setColors((prev) =>

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useClerk } from "@clerk/nextjs";
 import { User, LogOut, Settings, FileText, CreditCard, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useUser } from "@/lib/hooks/useUser";
 import { cn } from "@/lib/utils";
 
@@ -57,9 +58,11 @@ export default function UserMenu() {
         aria-expanded={isOpen}
       >
         {user.image ? (
-          <img
+          <Image
             src={user.image}
             alt={user.name || "User"}
+            width={40}
+            height={40}
             className="w-10 h-10 rounded-full ring-2 ring-purple-400/50"
           />
         ) : (
@@ -101,9 +104,11 @@ export default function UserMenu() {
               <div className="px-4 py-4 border-b border-white/10">
                 <div className="flex items-center gap-3">
                   {user.image ? (
-                    <img
+                    <Image
                       src={user.image}
                       alt={user.name || "User"}
+                      width={48}
+                      height={48}
                       className="w-12 h-12 rounded-full ring-2 ring-purple-400/50"
                     />
                   ) : (

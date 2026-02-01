@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Search, Calendar, Filter, Download, Clock, User, Shield, Trash2, Edit, Settings } from 'lucide-react'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
@@ -87,11 +87,7 @@ export default function AdminLogsPage() {
     pages: 0,
   })
 
-  useEffect(() => {
-    fetchLogs()
-  }, [search, selectedAction, selectedAdmin, pagination.page])
-
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -114,7 +110,11 @@ export default function AdminLogsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [search, selectedAction, selectedAdmin, pagination.page, pagination.limit])
+
+  useEffect(() => {
+    fetchLogs()
+  }, [fetchLogs])
 
   const formatLogDescription = (log: AdminLog) => {
     const config = ACTION_CONFIG[log.action] || {

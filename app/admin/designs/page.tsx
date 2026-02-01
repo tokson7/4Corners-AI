@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Search, Filter, MoreVertical, Eye, Star, Trash2, ExternalLink } from 'lucide-react'
 import {
   Table,
@@ -62,11 +62,7 @@ export default function DesignSystemsPage() {
     (filters.featured !== null ? 1 : 0) +
     filters.status.length
 
-  useEffect(() => {
-    fetchDesigns()
-  }, [search, pagination.page, filters])
-
-  const fetchDesigns = async () => {
+  const fetchDesigns = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -93,7 +89,11 @@ export default function DesignSystemsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [search, pagination.page, pagination.limit, filters])
+
+  useEffect(() => {
+    fetchDesigns()
+  }, [fetchDesigns])
 
   const handleToggleFeatured = async (designId: string, currentFeatured: boolean) => {
     try {

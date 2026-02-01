@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -65,19 +65,7 @@ export default function AdminDashboardPage() {
   const [days, setDays] = useState(30);
 
   // Check admin access
-  useEffect(() => {
-    if (!userLoading && !isAuthenticated) {
-      router.push("/signin?callbackUrl=/admin/dashboard");
-      return;
-    }
-
-    // Check if user is admin (this would come from the API)
-    if (!userLoading && isAuthenticated) {
-      checkAdminAccess();
-    }
-  }, [userLoading, isAuthenticated, user, router]);
-
-  const checkAdminAccess = async () => {
+  const checkAdminAccess = useCallback(async () => {
     try {
       const response = await fetch("/api/admin/analytics");
       if (response.status === 403) {
@@ -91,7 +79,19 @@ export default function AdminDashboardPage() {
       console.error("Admin access check failed:", err);
       router.push("/dashboard");
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    if (!userLoading && !isAuthenticated) {
+      router.push("/signin?callbackUrl=/admin/dashboard");
+      return;
+    }
+
+    // Check if user is admin (this would come from the API)
+    if (!userLoading && isAuthenticated) {
+      checkAdminAccess();
+    }
+  }, [userLoading, isAuthenticated, user, router, checkAdminAccess]);
 
   // Fetch metrics
   useEffect(() => {

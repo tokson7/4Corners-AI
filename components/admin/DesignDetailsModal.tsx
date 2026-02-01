@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -58,13 +58,7 @@ export default function DesignDetailsModal({
   const [details, setDetails] = useState<DesignDetails | null>(null)
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (open) {
-      fetchDetails()
-    }
-  }, [open, design.id])
-
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/admin/designs/${design.id}`)
@@ -75,7 +69,13 @@ export default function DesignDetailsModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [design.id])
+
+  useEffect(() => {
+    if (open) {
+      fetchDetails()
+    }
+  }, [open, fetchDetails])
 
   const parseColors = (colors: any) => {
     try {
