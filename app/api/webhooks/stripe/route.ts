@@ -89,14 +89,15 @@ export async function POST(request: NextRequest) {
  * Handle successful checkout session
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const { clerkId, plan } = session.metadata || {};
+  const { clerkId, userId, plan } = session.metadata || {};
+  const userIdentifier = clerkId || userId;
 
-  if (!clerkId || !plan) {
-    console.error('Missing metadata in checkout session');
+  if (!userIdentifier || !plan) {
+    console.error('Missing metadata in checkout session:', session.metadata);
     return;
   }
 
-  console.log('✅ Checkout completed:', { clerkId, plan });
+  console.log('✅ Checkout completed:', { clerkId: userIdentifier, plan });
 
   const planCredits: Record<string, number> = {
     basic: 50,
@@ -115,11 +116,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   await prisma.user.update({
-    where: { clerkId },
+    where: { clerkId: userIdentifier },
     data: updateData,
   });
 
-  console.log('✅ User updated with subscription:', clerkId);
+  console.log('✅ User updated with subscription:', userIdentifier);
 }
 
 /**

@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
       customer_email: user.email || undefined,
       client_reference_id: user.id,
       metadata: {
+        clerkId: user.id,
         userId: user.id,
         plan,
       },
