@@ -37,9 +37,29 @@ export function ensureUrlScheme(url: string | undefined | null): string {
 /**
  * Gets the app base URL from environment or request headers
  * Ensures the URL always has a proper scheme
+ * 
+ * Priority order:
+ * 1. NEXT_PUBLIC_APP_URL (most reliable for production)
+ * 2. VERCEL_URL (automatically set by Vercel)
+ * 3. Request origin header
+ * 4. Fallback to localhost
  */
 export function getAppBaseUrl(requestOrigin?: string | null): string {
-  // Priority: request origin > env var > default
-  const url = requestOrigin || process.env.NEXT_PUBLIC_APP_URL;
-  return ensureUrlScheme(url);
+  // In production, prefer the explicitly configured URL
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return ensureUrlScheme(process.env.NEXT_PUBLIC_APP_URL);
+  }
+  
+  // Vercel automatically sets VERCEL_URL (without scheme)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Fall back to request origin if available
+  if (requestOrigin) {
+    return ensureUrlScheme(requestOrigin);
+  }
+  
+  // Development fallback
+  return 'http://localhost:3000';
 }
