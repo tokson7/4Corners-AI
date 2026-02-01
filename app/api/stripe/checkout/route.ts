@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/utils/auth";
 import { stripe, STRIPE_PLANS } from "@/lib/stripe/config";
 import { trackEventServer } from "@/lib/analytics/trackEvent";
+import { getAppBaseUrl } from "@/lib/utils/url";
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,8 +30,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get origin URL for redirects
-    const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    // Get origin URL for redirects (ensures proper scheme)
+    const origin = getAppBaseUrl(req.headers.get("origin"));
 
     // Create Stripe Checkout Session
     const checkoutSession = await stripe.checkout.sessions.create({

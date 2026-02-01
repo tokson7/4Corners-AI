@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { stripe } from '@/lib/stripe/config';
 import { prisma } from '@/lib/prisma';
+import { getAppBaseUrl } from '@/lib/utils/url';
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
     // Create portal session with timeout protection
     const sessionPromise = stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+      return_url: `${getAppBaseUrl()}/dashboard`,
     });
 
     const timeoutPromise = new Promise((_, reject) => 

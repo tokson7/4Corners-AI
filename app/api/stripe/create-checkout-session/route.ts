@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { stripe, STRIPE_PLANS, PlanType } from '@/lib/stripe/config';
 import { prisma } from '@/lib/prisma';
+import { getAppBaseUrl } from '@/lib/utils/url';
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,8 +69,8 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?payment=cancelled`,
+      success_url: `${getAppBaseUrl()}/dashboard?payment=success`,
+      cancel_url: `${getAppBaseUrl()}/pricing?payment=cancelled`,
       metadata: {
         userId: user.id,
         plan: plan,
