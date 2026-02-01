@@ -185,7 +185,7 @@ export default async function AnalyticsPage() {
             {analytics.topUsers.length === 0 ? (
               <p className="text-purple-300 text-center py-8">No users yet</p>
             ) : (
-              analytics.topUsers.map((user, idx) => (
+              analytics.topUsers.map((user: any, idx: number) => (
                 <div
                   key={user.id}
                   className="flex items-center justify-between p-4 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
@@ -226,7 +226,7 @@ export default async function AnalyticsPage() {
             {analytics.recentActivity.length === 0 ? (
               <p className="text-purple-300 text-center py-8">No activity yet</p>
             ) : (
-              analytics.recentActivity.map((activity) => (
+              analytics.recentActivity.map((activity: any) => (
                 <div
                   key={activity.id}
                   className="p-4 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"

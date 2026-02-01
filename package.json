@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "next build",
+    "build": "npm install --legacy-peer-deps && next build",
+    "vercel-build": "npm install --legacy-peer-deps && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
@@ -59,7 +60,7 @@
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.0",
-    "@testing-library/react": "^16.0.0",
+    "@testing-library/react": "^16.1.0",
     "@types/jest": "^29.5.0",
     "@types/jszip": "^3.4.1",
     "@types/node": "^20",
